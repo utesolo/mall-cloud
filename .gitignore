@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Custom Config ###
+# 敏感配置文件不上传
+**/application-dev.yml
+**/application-prod.yml
+**/application-local.yml
