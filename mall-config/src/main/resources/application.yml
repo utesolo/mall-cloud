@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: mall-config
+  config:
+    import: optional:nacos:${spring.application.name}.yml
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+      config:
+        server-addr: localhost:8848
+        file-extension: yml
+
+
+server:
+  port: 8087
+
+logging:
+  level:
+    xyh.dp.mall: debug

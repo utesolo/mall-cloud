@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: mall-search
+  config:
+    import: optional:nacos:${spring.application.name}.yml
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+      config:
+        server-addr: localhost:8848
+        file-extension: yml
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 4
+  elasticsearch:
+    uris: http://localhost:9200
+
+server:
+  port: 8085
+
+logging:
+  level:
+    xyh.dp.mall: debug

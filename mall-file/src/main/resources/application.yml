@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: mall-file
+  config:
+    import: optional:nacos:${spring.application.name}.yml
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+      config:
+        server-addr: localhost:8848
+        file-extension: yml
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 2
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+
+server:
+  port: 8083
+
+logging:
+  level:
+    xyh.dp.mall: debug

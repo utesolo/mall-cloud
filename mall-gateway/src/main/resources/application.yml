@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: mall-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+    gateway:
+      routes:
+        - id: mall-auth
+          uri: lb://mall-auth
+          predicates:
+            - Path=/auth/**
+        - id: mall-product
+          uri: lb://mall-product
+          predicates:
+            - Path=/product/**
+        - id: mall-file
+          uri: lb://mall-file
+          predicates:
+            - Path=/file/**
+        - id: mall-trade
+          uri: lb://mall-trade
+          predicates:
+            - Path=/trade/**
+        - id: mall-search
+          uri: lb://mall-search
+          predicates:
+            - Path=/search/**
+
+server:
+  port: 8080
+
+logging:
+  level:
+    xyh.dp.mall: debug

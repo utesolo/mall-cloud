@@ -1,0 +1,31 @@
+# 配置文件模板 - 复制此文件为application-local.yml并填写真实配置
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/mall_auth?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: your-database-username
+    password: your-database-password
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      password: your-redis-password  # 如果Redis没有密码则删除此行
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: xyh.dp.mall.auth.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+# 微信小程序配置
+wechat:
+  mini-app:
+    app-id: your-wechat-mini-app-id
+    app-secret: your-wechat-mini-app-secret
+
+# JWT配置
+jwt:
+  secret: your-jwt-secret-key-at-least-256-bits-long
+  expiration: 604800000  # 7天(毫秒)
