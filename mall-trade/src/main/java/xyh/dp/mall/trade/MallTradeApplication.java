@@ -1,0 +1,26 @@
+package xyh.dp.mall.trade;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+
+/**
+ * 交易服务启动类
+ * 提供购物车、订单、支付回调等交易功能
+ * 
+ * @author mall-cloud
+ * @since 1.0.0
+ */
+@SpringBootApplication
+@EnableDiscoveryClient
+public class MallTradeApplication {
+
+    /**
+     * 启动交易服务
+     * 
+     * @param args 启动参数
+     */
+    public static void main(String[] args) {
+        SpringApplication.run(MallTradeApplication.class, args);
+    }
+}
