@@ -1,0 +1,18 @@
+-- 定时任务服务数据库
+CREATE DATABASE IF NOT EXISTS mall_job DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE mall_job;
+
+-- 定时任务配置表(示例)
+CREATE TABLE `scheduled_task` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '任务ID',
+  `task_name` VARCHAR(100) NOT NULL COMMENT '任务名称',
+  `task_type` VARCHAR(50) NOT NULL COMMENT '任务类型',
+  `cron_expression` VARCHAR(100) NOT NULL COMMENT 'Cron表达式',
+  `status` VARCHAR(20) NOT NULL DEFAULT 'ENABLED' COMMENT '状态: ENABLED-启用, DISABLED-禁用',
+  `last_run_time` DATETIME DEFAULT NULL COMMENT '上次执行时间',
+  `next_run_time` DATETIME DEFAULT NULL COMMENT '下次执行时间',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='定时任务配置表';
