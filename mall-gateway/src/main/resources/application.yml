@@ -33,7 +33,7 @@ spring:
             - Path=/search/**
 
 server:
-  port: 8081
+  port: 8080
 
 logging:
   level:

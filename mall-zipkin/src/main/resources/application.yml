@@ -1,6 +1,8 @@
 spring:
   application:
     name: mall-zipkin
+  config:
+    import: optional:nacos:${spring.application.name}.yml
   cloud:
     nacos:
       discovery:
@@ -8,6 +10,8 @@ spring:
       config:
         server-addr: localhost:8848
         file-extension: yml
+  profiles:
+    active: local
 
 management:
   tracing:

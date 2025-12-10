@@ -1,21 +1,22 @@
 ## Codebase
 - Java 25
 - Apache Maven 3.8.4
-- Spring Boot 4.0.0-M1
-- Alibaba Nacos 2025.0.0.0-preview
-- -Nacos 2.5.1
+- Spring Boot 3.5.8
+- Spring Cloud 2025.0.0
+- Alibaba Nacos 2025.0.0.0
+- -Nacos 3.1.1
 
 ## Database
 - MySQL 8.0.39
 - Redis 5.0.14.1
-- Spring Data Redis 4.0.0-M1
-- Mybatis Plus 3.5.5
-- Spring Data Elasticsearch 4.0.0-M1
+- Spring Data Redis 3.5.8
+- Mybatis Plus 3.5.9
+- Spring Data Elasticsearch 
 - Elasticsearch 7.17.5
 
 ## Util
 - Slf4j 2.0.17
-- Assertj Core 4.0.0-M1
+- Assertj Core 3.26.3
 - Json Util Assertj 5.1.0
 - Jwt 0.12.5
 - OpenApi
