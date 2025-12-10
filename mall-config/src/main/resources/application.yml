@@ -3,6 +3,8 @@ spring:
     name: mall-config
   config:
     import: optional:nacos:${spring.application.name}.yml
+  profiles:
+    active: local
   cloud:
     nacos:
       discovery:
