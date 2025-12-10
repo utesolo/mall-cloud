@@ -4,7 +4,8 @@
 - Spring Boot 3.5.8
 - Spring Cloud 2025.0.0
 - Alibaba Nacos 2025.0.0.0
-- -Nacos 3.1.1
+- OpenFeign 4.3.0
+- Nacos 3.1.1
 
 ## Database
 - MySQL 8.0.39
