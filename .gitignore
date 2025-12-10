@@ -37,3 +37,6 @@ build/
 **/application-dev.yml
 **/application-prod.yml
 **/application-local.yml
+
+#日志文件不上传
+
