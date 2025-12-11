@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <!-- Import Spring Boot default logback configuration -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    
+    <!-- Define application name property -->
+    <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="mall-app"/>
+    
     <!-- Console output configuration -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -10,13 +16,13 @@
 
     <!-- File output configuration - All logs -->
     <appender name="FILE_ALL" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/${spring.application.name}/all.log</file>
+        <file>logs/${APP_NAME}/all.log</file>
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
             <charset>UTF-8</charset>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>logs/${spring.application.name}/all.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>logs/${APP_NAME}/all.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>100MB</maxFileSize>
             <maxHistory>30</maxHistory>
             <totalSizeCap>10GB</totalSizeCap>
@@ -25,7 +31,7 @@
 
     <!-- File output configuration - Error logs -->
     <appender name="FILE_ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/${spring.application.name}/error.log</file>
+        <file>logs/${APP_NAME}/error.log</file>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>ERROR</level>
             <onMatch>ACCEPT</onMatch>
@@ -36,7 +42,7 @@
             <charset>UTF-8</charset>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>logs/${spring.application.name}/error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>logs/${APP_NAME}/error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>50MB</maxFileSize>
             <maxHistory>60</maxHistory>
             <totalSizeCap>5GB</totalSizeCap>
@@ -45,7 +51,7 @@
 
     <!-- File output configuration - Warn logs -->
     <appender name="FILE_WARN" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/${spring.application.name}/warn.log</file>
+        <file>logs/${APP_NAME}/warn.log</file>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>WARN</level>
             <onMatch>ACCEPT</onMatch>
@@ -56,7 +62,7 @@
             <charset>UTF-8</charset>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>logs/${spring.application.name}/warn.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>logs/${APP_NAME}/warn.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>50MB</maxFileSize>
             <maxHistory>30</maxHistory>
             <totalSizeCap>3GB</totalSizeCap>
@@ -65,7 +71,7 @@
 
     <!-- File output configuration - Info logs -->
     <appender name="FILE_INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/${spring.application.name}/info.log</file>
+        <file>logs/${APP_NAME}/info.log</file>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>INFO</level>
             <onMatch>ACCEPT</onMatch>
@@ -76,7 +82,7 @@
             <charset>UTF-8</charset>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>logs/${spring.application.name}/info.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>logs/${APP_NAME}/info.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>100MB</maxFileSize>
             <maxHistory>15</maxHistory>
             <totalSizeCap>5GB</totalSizeCap>

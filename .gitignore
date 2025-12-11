@@ -39,4 +39,5 @@ build/
 **/application-local.yml
 
 #日志文件不上传
+/logs/
 
