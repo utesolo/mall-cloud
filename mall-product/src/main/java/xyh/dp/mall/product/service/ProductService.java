@@ -131,17 +131,44 @@ public class ProductService {
      */
     private ProductVO convertToVO(Product product) {
         ProductVO vo = new ProductVO();
+        
+        // 基础信息
         vo.setId(product.getId());
         vo.setName(product.getName());
         vo.setCategoryId(product.getCategoryId());
         vo.setMainImage(product.getMainImage());
         vo.setDescription(product.getDescription());
+        vo.setSpecification(product.getSpecification());
         vo.setPrice(product.getPrice());
         vo.setStock(product.getStock());
         vo.setSales(product.getSales());
+        vo.setSupplierId(product.getSupplierId());
+        vo.setStatus(product.getStatus());
+        
+        // 种子特有属性
+        vo.setOrigin(product.getOrigin());
+        vo.setVariety(product.getVariety());
         vo.setDifficulty(product.getDifficulty());
         vo.setGrowthCycle(product.getGrowthCycle());
-        vo.setStatus(product.getStatus());
+        vo.setGerminationRate(product.getGerminationRate());
+        vo.setPurity(product.getPurity());
+        vo.setShelfLife(product.getShelfLife());
+        vo.setProductionDate(product.getProductionDate());
+        
+        // 种植环境要求
+        vo.setMinTemperature(product.getMinTemperature());
+        vo.setMaxTemperature(product.getMaxTemperature());
+        vo.setMinHumidity(product.getMinHumidity());
+        vo.setMaxHumidity(product.getMaxHumidity());
+        vo.setMinPh(product.getMinPh());
+        vo.setMaxPh(product.getMaxPh());
+        vo.setLightRequirement(product.getLightRequirement());
+        
+        // 质量溯源
+        vo.setTraceCode(product.getTraceCode());
+        vo.setBatchNumber(product.getBatchNumber());
+        vo.setInspectionReportUrl(product.getInspectionReportUrl());
+        vo.setBlockchainHash(product.getBlockchainHash());
         
         // JSON字段解析
         if (StringUtils.hasText(product.getImages())) {
@@ -154,6 +181,12 @@ public class ProductService {
             vo.setRegions(JSON.parseArray(product.getRegions(), String.class));
         } else {
             vo.setRegions(new ArrayList<>());
+        }
+        
+        if (StringUtils.hasText(product.getPlantingSeasons())) {
+            vo.setPlantingSeasons(JSON.parseArray(product.getPlantingSeasons(), String.class));
+        } else {
+            vo.setPlantingSeasons(new ArrayList<>());
         }
         
         // 查询分类名称
