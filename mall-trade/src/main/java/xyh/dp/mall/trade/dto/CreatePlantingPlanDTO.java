@@ -23,8 +23,7 @@ public class CreatePlantingPlanDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "农户ID", required = true, example = "FARMER001")
-    @NotBlank(message = "农户ID不能为空")
+    @Schema(description = "农户ID（自动从登录信息获取，无需传递）", example = "FARMER001")
     private String farmerId;
 
     @Schema(description = "种植面积(亩)", required = true, example = "30.0")

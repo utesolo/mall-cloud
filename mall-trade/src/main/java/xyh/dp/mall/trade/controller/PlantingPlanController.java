@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import xyh.dp.mall.common.annotation.RequireLogin;
+import xyh.dp.mall.common.context.UserContextHolder;
 import xyh.dp.mall.common.result.Result;
 import xyh.dp.mall.trade.dto.CreatePlantingPlanDTO;
 import xyh.dp.mall.trade.service.PlantingPlanService;
@@ -30,14 +32,19 @@ public class PlantingPlanController {
 
     /**
      * 创建种植计划
+     * 从当前登录用户上下文自动获取农户ID
      * 
      * @param createDTO 创建种植计划请求
      * @return 种植计划信息
      */
     @PostMapping("/create")
-    @Operation(summary = "创建种植计划", description = "农户提交种植计划信息")
+    @RequireLogin(allowedTypes = "FARMER")
+    @Operation(summary = "创建种植计划", description = "农户提交种植计划信息，自动从登录信息获取农户ID")
     public Result<PlantingPlanVO> createPlan(@Valid @RequestBody CreatePlantingPlanDTO createDTO) {
-        log.info("创建种植计划请求: farmerId={}, variety={}", createDTO.getFarmerId(), createDTO.getVariety());
+        // 从用户上下文自动获取农户ID
+        String farmerId = UserContextHolder.getBusinessUserId();
+        createDTO.setFarmerId(farmerId);
+        log.info("创建种植计划请求: farmerId={}, variety={}", farmerId, createDTO.getVariety());
         PlantingPlanVO planVO = plantingPlanService.createPlan(createDTO);
         return Result.success(planVO, "种植计划创建成功");
     }
@@ -58,17 +65,18 @@ public class PlantingPlanController {
 
     /**
      * 确认匹配结果
+     * 从当前登录用户上下文自动获取农户ID
      * 
      * @param planId 种植计划ID
-     * @param farmerId 农户ID
      * @return 操作结果
      */
     @PostMapping("/{planId}/confirm")
-    @Operation(summary = "确认匹配", description = "农户确认匹配结果")
+    @RequireLogin(allowedTypes = "FARMER")
+    @Operation(summary = "确认匹配", description = "农户确认匹配结果，自动从登录信息获取农户ID")
     public Result<Void> confirmMatch(
-            @Parameter(description = "种植计划ID") @PathVariable String planId,
-            @Parameter(description = "农户ID") @RequestParam String farmerId
+            @Parameter(description = "种植计划ID") @PathVariable String planId
     ) {
+        String farmerId = UserContextHolder.getBusinessUserId();
         log.info("确认匹配请求: planId={}, farmerId={}", planId, farmerId);
         plantingPlanService.confirmMatch(planId, farmerId);
         return Result.success(null, "匹配确认成功");
@@ -76,17 +84,18 @@ public class PlantingPlanController {
 
     /**
      * 取消种植计划
+     * 从当前登录用户上下文自动获取农户ID
      * 
      * @param planId 种植计划ID
-     * @param farmerId 农户ID
      * @return 操作结果
      */
     @PostMapping("/{planId}/cancel")
-    @Operation(summary = "取消种植计划", description = "取消未确认的种植计划")
+    @RequireLogin(allowedTypes = "FARMER")
+    @Operation(summary = "取消种植计划", description = "取消未确认的种植计划，自动从登录信息获取农户ID")
     public Result<Void> cancelPlan(
-            @Parameter(description = "种植计划ID") @PathVariable String planId,
-            @Parameter(description = "农户ID") @RequestParam String farmerId
+            @Parameter(description = "种植计划ID") @PathVariable String planId
     ) {
+        String farmerId = UserContextHolder.getBusinessUserId();
         log.info("取消种植计划请求: planId={}, farmerId={}", planId, farmerId);
         plantingPlanService.cancelPlan(planId, farmerId);
         return Result.success(null, "种植计划取消成功");
@@ -106,41 +115,43 @@ public class PlantingPlanController {
     }
 
     /**
-     * 分页查询农户的种植计划
+     * 分页查询当前农户的种植计划
+     * 从当前登录用户上下文自动获取农户ID
      * 
-     * @param farmerId 农户ID
      * @param pageNum 页码
      * @param pageSize 每页数量
      * @param matchStatus 匹配状态
      * @return 种植计划分页数据
      */
     @GetMapping("/farmer/page")
-    @Operation(summary = "分页查询农户种植计划", description = "查询指定农户的种植计划列表")
+    @RequireLogin(allowedTypes = "FARMER")
+    @Operation(summary = "分页查询我的种植计划", description = "查询当前登录农户的种植计划列表")
     public Result<Page<PlantingPlanVO>> pageQueryByFarmer(
-            @Parameter(description = "农户ID") @RequestParam String farmerId,
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer pageNum,
             @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") Integer pageSize,
             @Parameter(description = "匹配状态") @RequestParam(required = false) String matchStatus
     ) {
+        String farmerId = UserContextHolder.getBusinessUserId();
         Page<PlantingPlanVO> page = plantingPlanService.pageQueryByFarmer(farmerId, pageNum, pageSize, matchStatus);
         return Result.success(page);
     }
 
     /**
-     * 分页查询供销商可匹配的种植计划
+     * 分页查询当前供销商的匹配计划
+     * 从当前登录用户上下文自动获取供销商ID
      * 
-     * @param supplierId 供销商ID
      * @param pageNum 页码
      * @param pageSize 每页数量
      * @return 种植计划分页数据
      */
     @GetMapping("/supplier/page")
-    @Operation(summary = "分页查询供销商匹配计划", description = "查询匹配到指定供销商的种植计划")
+    @RequireLogin(allowedTypes = "SUPPLIER")
+    @Operation(summary = "分页查询我的匹配计划", description = "查询匹配到当前登录供销商的种植计划")
     public Result<Page<PlantingPlanVO>> pageQueryForSupplier(
-            @Parameter(description = "供销商ID") @RequestParam String supplierId,
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer pageNum,
             @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") Integer pageSize
     ) {
+        String supplierId = UserContextHolder.getBusinessUserId();
         Page<PlantingPlanVO> page = plantingPlanService.pageQueryForSupplier(supplierId, pageNum, pageSize);
         return Result.success(page);
     }
