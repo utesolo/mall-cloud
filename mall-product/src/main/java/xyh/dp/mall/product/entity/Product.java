@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 @Data
 @TableName("product")
 public class Product implements Serializable {
+    // TODO 对于种子类商品添加适宜温度、湿度、盐碱度等字段
 
     private static final long serialVersionUID = 1L;
 

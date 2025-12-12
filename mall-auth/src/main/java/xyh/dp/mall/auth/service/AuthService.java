@@ -52,6 +52,7 @@ public class AuthService {
      */
     @Transactional(rollbackFor = Exception.class)
     public LoginVO weChatLogin(WeChatLoginDTO loginDTO) {
+        // TODO 防止空指针异常
         // 1. 调用微信接口获取openid
         String openid = getOpenIdFromWeChat(loginDTO.getCode());
         

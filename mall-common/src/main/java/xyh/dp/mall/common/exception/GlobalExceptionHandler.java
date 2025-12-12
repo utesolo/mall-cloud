@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    // TODO 异常处理细致划分
 
     /**
      * 处理业务异常

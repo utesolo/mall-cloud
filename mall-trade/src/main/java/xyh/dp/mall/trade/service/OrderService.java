@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class OrderService {
+    // TODO 折扣功能，部分商品添加特价等活动折扣
 
     private final OrderMapper orderMapper;
 

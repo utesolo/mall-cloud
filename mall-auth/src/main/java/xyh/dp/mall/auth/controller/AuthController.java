@@ -22,6 +22,7 @@ import xyh.dp.mall.common.result.Result;
 @RequiredArgsConstructor
 @Tag(name = "认证接口", description = "用户登录、注册、退出等认证相关接口")
 public class AuthController {
+    // TODO 数据传输加密
 
     private final AuthService authService;
 

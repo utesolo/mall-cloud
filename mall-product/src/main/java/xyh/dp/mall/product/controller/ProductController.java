@@ -27,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "商品接口", description = "商品查询、分类查询等接口")
 public class ProductController {
+    // TODO 商品添加，修改，删除
 
     private final ProductService productService;
 

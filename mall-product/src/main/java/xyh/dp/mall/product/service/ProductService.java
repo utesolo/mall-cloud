@@ -29,6 +29,10 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ProductService {
+    // TODO 添加多线程，在多人请求时保护数据同步
+    // TODO 通过售卖的商品数量来进行销售排序
+    // TODO 最近买过
+    // TODO 最近多人买
 
     private final ProductMapper productMapper;
     private final CategoryMapper categoryMapper;
