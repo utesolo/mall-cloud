@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import xyh.dp.mall.common.exception.BusinessException;
 import xyh.dp.mall.product.entity.Category;
@@ -121,6 +122,91 @@ public class ProductService {
         queryWrapper.eq(Category::getStatus, "NORMAL");
         queryWrapper.orderByAsc(Category::getSort);
         return categoryMapper.selectList(queryWrapper);
+    }
+
+    /**
+     * 扣减商品库存
+     * 使用乐观锁防止超卖
+     * 
+     * @param productId 商品ID
+     * @param quantity 扣减数量
+     * @return 是否成功
+     * @throws BusinessException 库存不足
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public boolean deductStock(Long productId, Integer quantity) {
+        log.info("扣减库存, productId: {}, quantity: {}", productId, quantity);
+        
+        Product product = productMapper.selectById(productId);
+        if (product == null) {
+            throw new BusinessException("商品不存在");
+        }
+        
+        if (product.getStock() < quantity) {
+            throw new BusinessException("库存不足");
+        }
+        
+        // 使用乐观锁更新，防止超卖
+        int affected = productMapper.deductStock(productId, quantity, product.getStock());
+        if (affected == 0) {
+            throw new BusinessException("库存不足或已被他人购买");
+        }
+        
+        log.info("扣减库存成功, productId: {}, quantity: {}, remaining: {}", 
+                productId, quantity, product.getStock() - quantity);
+        return true;
+    }
+
+    /**
+     * 恢复商品库存
+     * 用于订单取消或失败时回滚
+     * 
+     * @param productId 商品ID
+     * @param quantity 恢复数量
+     * @return 是否成功
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public boolean restoreStock(Long productId, Integer quantity) {
+        log.info("恢复库存, productId: {}, quantity: {}", productId, quantity);
+        
+        Product product = productMapper.selectById(productId);
+        if (product == null) {
+            log.warn("商品不存在, 无法恢复库存, productId: {}", productId);
+            return false;
+        }
+        
+        product.setStock(product.getStock() + quantity);
+        productMapper.updateById(product);
+        
+        log.info("恢复库存成功, productId: {}, quantity: {}, total: {}", 
+                productId, quantity, product.getStock());
+        return true;
+    }
+
+    /**
+     * 增加商品销量
+     * 
+     * @param productId 商品ID
+     * @param quantity 增加数量
+     * @return 是否成功
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public boolean increaseSales(Long productId, Integer quantity) {
+        log.info("增加销量, productId: {}, quantity: {}", productId, quantity);
+        
+        Product product = productMapper.selectById(productId);
+        if (product == null) {
+            log.warn("商品不存在, 无法增加销量, productId: {}", productId);
+            return false;
+        }
+        
+        Integer currentSales = product.getSales() != null ? product.getSales() : 0;
+        product.setSales(currentSales + quantity);
+        productMapper.updateById(product);
+        
+        log.info("增加销量成功, productId: {}, quantity: {}, total: {}", 
+                productId, quantity, product.getSales());
+        return true;
     }
 
     /**
