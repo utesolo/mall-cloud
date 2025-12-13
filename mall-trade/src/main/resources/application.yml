@@ -12,6 +12,15 @@ spring:
       config:
         server-addr: ${nacos.server-addr:localhost:8848}
         file-extension: yml
+    openfeign:
+      circuitbreaker:
+        enabled: true
+      client:
+        config:
+          default:
+            connect-timeout: 5000
+            read-timeout: 10000
+            logger-level: full
 
 server:
   port: 8084
@@ -19,3 +28,4 @@ server:
 logging:
   level:
     xyh.dp.mall: debug
+    org.springframework.cloud.openfeign: debug
