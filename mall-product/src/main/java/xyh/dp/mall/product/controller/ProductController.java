@@ -82,4 +82,63 @@ public class ProductController {
         List<Category> categoryList = productService.getCategoryList();
         return Result.success(categoryList);
     }
+
+    // ==================== 库存管理接口（供Feign调用） ====================
+
+    /**
+     * 扣减商品库存
+     * 内部接口，供订单服务通过Feign调用
+     * 
+     * @param productId 商品ID
+     * @param quantity 扣减数量
+     * @return 操作结果
+     */
+    @PostMapping("/stock/deduct")
+    @Operation(summary = "扣减库存", description = "内部接口，供订单服务调用")
+    public Result<Boolean> deductStock(
+            @Parameter(description = "商品ID") @RequestParam Long productId,
+            @Parameter(description = "扣减数量") @RequestParam Integer quantity
+    ) {
+        log.info("扣减库存请求: productId={}, quantity={}", productId, quantity);
+        boolean success = productService.deductStock(productId, quantity);
+        return Result.success(success);
+    }
+
+    /**
+     * 恢复商品库存
+     * 内部接口，用于订单取消或失败时回滚
+     * 
+     * @param productId 商品ID
+     * @param quantity 恢复数量
+     * @return 操作结果
+     */
+    @PostMapping("/stock/restore")
+    @Operation(summary = "恢复库存", description = "内部接口，用于订单取消时回滚库存")
+    public Result<Boolean> restoreStock(
+            @Parameter(description = "商品ID") @RequestParam Long productId,
+            @Parameter(description = "恢复数量") @RequestParam Integer quantity
+    ) {
+        log.info("恢复库存请求: productId={}, quantity={}", productId, quantity);
+        boolean success = productService.restoreStock(productId, quantity);
+        return Result.success(success);
+    }
+
+    /**
+     * 增加商品销量
+     * 内部接口，订单完成后调用
+     * 
+     * @param productId 商品ID
+     * @param quantity 增加数量
+     * @return 操作结果
+     */
+    @PostMapping("/sales/increase")
+    @Operation(summary = "增加销量", description = "内部接口，订单完成后更新销量")
+    public Result<Boolean> increaseSales(
+            @Parameter(description = "商品ID") @RequestParam Long productId,
+            @Parameter(description = "增加数量") @RequestParam Integer quantity
+    ) {
+        log.info("增加销量请求: productId={}, quantity={}", productId, quantity);
+        boolean success = productService.increaseSales(productId, quantity);
+        return Result.success(success);
+    }
 }
