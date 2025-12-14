@@ -29,6 +29,20 @@ public interface ProductFeignClient {
     Result<ProductDTO> getProductById(@PathVariable("id") Long id);
 
     /**
+     * 根据品种和区域搜索商品（用于匹配）
+     * 
+     * @param variety 品种关键词
+     * @param region 区域关键词
+     * @param limit 返回数量限制
+     * @return 商品列表
+     */
+    @GetMapping("/product/search/match")
+    Result<java.util.List<ProductDTO>> searchProducts(
+            @RequestParam(value = "variety", required = false) String variety,
+            @RequestParam(value = "region", required = false) String region,
+            @RequestParam(value = "limit", defaultValue = "20") Integer limit);
+
+    /**
      * 扣减商品库存
      * 
      * @param productId 商品ID

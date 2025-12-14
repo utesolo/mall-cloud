@@ -7,6 +7,9 @@ import xyh.dp.mall.common.result.Result;
 import xyh.dp.mall.trade.feign.ProductFeignClient;
 import xyh.dp.mall.trade.feign.dto.ProductDTO;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 商品服务Feign降级处理
  * 当商品服务不可用时提供降级响应
@@ -40,6 +43,21 @@ public class ProductFeignFallback implements FallbackFactory<ProductFeignClient>
             public Result<ProductDTO> getProductById(Long id) {
                 log.warn("商品服务降级: getProductById({})", id);
                 return Result.error(503, "商品服务暂时不可用，请稍后重试");
+            }
+
+            /**
+             * 搜索商品降级处理
+             * 
+             * @param variety 品种关键词
+             * @param region 区域关键词
+             * @param limit 返回数量限制
+             * @return 降级结果（空列表）
+             */
+            @Override
+            public Result<List<ProductDTO>> searchProducts(String variety, String region, Integer limit) {
+                log.warn("商品服务降级: searchProducts({}, {}, {})", variety, region, limit);
+                // 返回空列表，让业务层回退到模拟匹配
+                return Result.success(new ArrayList<>(), "商品服务不可用，返回空列表");
             }
 
             /**

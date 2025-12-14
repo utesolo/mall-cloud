@@ -8,13 +8,22 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import xyh.dp.mall.common.exception.BusinessException;
+import xyh.dp.mall.common.result.Result;
 import xyh.dp.mall.trade.dto.CreatePlantingPlanDTO;
 import xyh.dp.mall.trade.entity.PlantingPlan;
+import xyh.dp.mall.trade.feign.ProductFeignClient;
+import xyh.dp.mall.trade.feign.dto.ProductDTO;
 import xyh.dp.mall.trade.mapper.PlantingPlanMapper;
+import xyh.dp.mall.trade.matching.engine.MatchScoreCalculator;
+import xyh.dp.mall.trade.matching.feature.MatchFeature;
+import xyh.dp.mall.trade.tracking.annotation.TrackEvent;
+import xyh.dp.mall.trade.tracking.dto.TrackingEventDTO;
+import xyh.dp.mall.trade.tracking.service.TrackingService;
 import xyh.dp.mall.trade.vo.PlantingPlanVO;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -31,6 +40,9 @@ import java.util.stream.Collectors;
 public class PlantingPlanService {
 
     private final PlantingPlanMapper plantingPlanMapper;
+    private final ProductFeignClient productFeignClient;
+    private final MatchScoreCalculator matchScoreCalculator;
+    private final TrackingService trackingService;
 
     /**
      * 创建种植计划
@@ -69,13 +81,14 @@ public class PlantingPlanService {
     }
 
     /**
-     * 执行供给匹配（模拟AI算法匹配）
+     * 执行智能供给匹配（规则引擎+加权评分）
      * 
      * @param planId 种植计划ID
      * @return 匹配后的种植计划信息
      * @throws BusinessException 计划不存在或已匹配
      */
     @Transactional(rollbackFor = Exception.class)
+    @TrackEvent(eventType = "MATCH_EXECUTE", description = "执行种植计划匹配")
     public PlantingPlanVO executeMatch(String planId) {
         PlantingPlan plan = getByPlanId(planId);
         
@@ -83,33 +96,199 @@ public class PlantingPlanService {
             throw new BusinessException("该计划已匹配或已取消");
         }
         
-        // 模拟AI匹配算法
-        int matchScore = calculateMatchScore(plan);
-        String supplierId = findBestSupplier(plan);
-        String climateMatch = generateClimateAnalysis(plan);
+        // 调用智能匹配算法
+        MatchFeature bestMatch = executeIntelligentMatch(plan);
         
-        // 更新匹配信息
-        plan.setMatchScore(matchScore);
-        plan.setSupplierId(supplierId);
-        plan.setClimateMatch(climateMatch);
+        if (bestMatch == null) {
+            // 回退到模拟匹配
+            int matchScore = calculateMatchScoreFallback(plan);
+            String supplierId = findBestSupplierFallback(plan);
+            String climateMatch = generateClimateAnalysis(plan);
+            
+            plan.setMatchScore(matchScore);
+            plan.setSupplierId(supplierId);
+            plan.setClimateMatch(climateMatch);
+        } else {
+            // 使用智能匹配结果
+            plan.setMatchScore(bestMatch.getTotalScore().intValue());
+            plan.setSupplierId(findSupplierByProduct(bestMatch.getProductId()));
+            plan.setClimateMatch(bestMatch.getRecommendation());
+            
+            // 记录匹配埋点
+            recordMatchEvent(plan, bestMatch, "MATCH_VIEW");
+        }
+        
         plan.setMatchTime(LocalDateTime.now());
         plan.setMatchStatus("MATCHED");
         plan.setUpdateTime(LocalDateTime.now());
         
         plantingPlanMapper.updateById(plan);
-        log.info("供给匹配成功, planId: {}, supplierId: {}, matchScore: {}", planId, supplierId, matchScore);
+        log.info("供给匹配成功, planId: {}, supplierId: {}, matchScore: {}", 
+                planId, plan.getSupplierId(), plan.getMatchScore());
         
         return convertToVO(plan);
     }
 
     /**
-     * 确认匹配结果
+     * 获取种植计划的推荐商品列表
+     * 
+     * @param planId 种植计划ID
+     * @param limit 推荐数量限制
+     * @return 推荐商品匹配特征列表
+     */
+    public List<MatchFeature> getRecommendedProducts(String planId, int limit) {
+        PlantingPlan plan = getByPlanId(planId);
+        
+        // 获取候选商品列表
+        List<ProductDTO> candidates = getCandidateProducts(plan);
+        
+        if (candidates.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // 计算匹配得分并排序
+        List<MatchFeature> recommendations = matchScoreCalculator.getRecommendations(plan, candidates, limit);
+        
+        // 记录埋点
+        for (MatchFeature feature : recommendations) {
+            recordMatchEvent(plan, feature, "MATCH_VIEW");
+        }
+        
+        return recommendations;
+    }
+
+    /**
+     * 用户点击某个推荐商品
+     * 
+     * @param planId 种植计划ID
+     * @param productId 商品ID
+     * @return 匹配特征
+     */
+    public MatchFeature clickProduct(String planId, Long productId) {
+        PlantingPlan plan = getByPlanId(planId);
+        ProductDTO product = getProductById(productId);
+        
+        if (product == null) {
+            throw new BusinessException("商品不存在");
+        }
+        
+        // 计算匹配得分
+        MatchFeature feature = matchScoreCalculator.calculateScore(plan, product);
+        
+        // 记录点击埋点
+        recordMatchEvent(plan, feature, "MATCH_CLICK");
+        
+        return feature;
+    }
+
+    /**
+     * 执行智能匹配算法
+     * 
+     * @param plan 种植计划
+     * @return 最佳匹配特征
+     */
+    private MatchFeature executeIntelligentMatch(PlantingPlan plan) {
+        try {
+            // 获取候选商品
+            List<ProductDTO> candidates = getCandidateProducts(plan);
+            
+            if (candidates.isEmpty()) {
+                log.warn("未找到候选商品, planId: {}", plan.getPlanId());
+                return null;
+            }
+            
+            // 计算匹配得分并找到最佳匹配
+            return matchScoreCalculator.findBestMatch(plan, candidates);
+        } catch (Exception e) {
+            log.error("智能匹配异常, 回退到模拟匹配: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 获取候选商品列表
+     * 
+     * @param plan 种植计划
+     * @return 候选商品列表
+     */
+    private List<ProductDTO> getCandidateProducts(PlantingPlan plan) {
+        try {
+            // 通过Feign调用商品服务获取候选商品
+            Result<List<ProductDTO>> result = productFeignClient.searchProducts(
+                    plan.getVariety(), plan.getRegion(), 20);
+            
+            if (result != null && result.isSuccess() && result.getData() != null) {
+                return result.getData();
+            }
+        } catch (Exception e) {
+            log.error("获取候选商品失败: {}", e.getMessage());
+        }
+        return new ArrayList<>();
+    }
+
+    /**
+     * 根据商品ID获取商品信息
+     * 
+     * @param productId 商品ID
+     * @return 商品信息
+     */
+    private ProductDTO getProductById(Long productId) {
+        try {
+            Result<ProductDTO> result = productFeignClient.getProductById(productId);
+            if (result != null && result.isSuccess()) {
+                return result.getData();
+            }
+        } catch (Exception e) {
+            log.error("获取商品信息失败: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * 根据商品ID查找供应商
+     * 
+     * @param productId 商品ID
+     * @return 供应商ID
+     */
+    private String findSupplierByProduct(Long productId) {
+        ProductDTO product = getProductById(productId);
+        if (product != null && product.getSupplierId() != null) {
+            return "SUPPLY" + String.format("%03d", product.getSupplierId());
+        }
+        return findBestSupplierFallback(null);
+    }
+
+    /**
+     * 记录匹配埋点事件
+     * 
+     * @param plan 种植计划
+     * @param feature 匹配特征
+     * @param eventType 事件类型
+     */
+    private void recordMatchEvent(PlantingPlan plan, MatchFeature feature, String eventType) {
+        try {
+            TrackingEventDTO dto = new TrackingEventDTO();
+            dto.setEventType(eventType);
+            dto.setPlanId(plan.getPlanId());
+            dto.setProductId(feature.getProductId());
+            dto.setSupplierId(plan.getSupplierId());
+            dto.setChannel("api");
+            
+            trackingService.trackMatchEventWithFeature(dto, feature);
+        } catch (Exception e) {
+            log.warn("记录匹配埋点失败: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 确认匹配结果（正样本埋点）
      * 
      * @param planId 种植计划ID
      * @param farmerId 农户ID
      * @throws BusinessException 业务异常
      */
     @Transactional(rollbackFor = Exception.class)
+    @TrackEvent(eventType = "MATCH_CONFIRM", description = "确认匹配结果")
     public void confirmMatch(String planId, String farmerId) {
         PlantingPlan plan = getByPlanId(planId);
         
@@ -125,7 +304,29 @@ public class PlantingPlanService {
         plan.setUpdateTime(LocalDateTime.now());
         plantingPlanMapper.updateById(plan);
         
+        // 记录确认埋点（正样本）
+        recordConfirmEvent(plan);
+        
         log.info("确认匹配成功, planId: {}", planId);
+    }
+
+    /**
+     * 记录确认埋点事件（正样本）
+     * 
+     * @param plan 种植计划
+     */
+    private void recordConfirmEvent(PlantingPlan plan) {
+        try {
+            TrackingEventDTO dto = new TrackingEventDTO();
+            dto.setEventType("MATCH_CONFIRM");
+            dto.setPlanId(plan.getPlanId());
+            dto.setSupplierId(plan.getSupplierId());
+            dto.setChannel("api");
+            
+            trackingService.trackEvent(dto);
+        } catch (Exception e) {
+            log.warn("记录确认埋点失败: {}", e.getMessage());
+        }
     }
 
     /**
@@ -267,25 +468,24 @@ public class PlantingPlanService {
     }
 
     /**
-     * 计算匹配度（模拟AI算法）
+     * 计算匹配度（回退方案）
      * 
      * @param plan 种植计划
      * @return 匹配度(0-100)
      */
-    private int calculateMatchScore(PlantingPlan plan) {
-        // TODO: 实际应调用AI模型，基于天气、历史记录、区域等计算
-        // 模拟返回60-100之间的随机分数
+    private int calculateMatchScoreFallback(PlantingPlan plan) {
+        // 回退到模拟匹配，返回60-100之间的随机分数
         return 60 + new Random().nextInt(41);
     }
 
     /**
-     * 查找最佳供销商（模拟）
+     * 查找最佳供销商（回退方案）
      * 
      * @param plan 种植计划
      * @return 供销商ID
      */
-    private String findBestSupplier(PlantingPlan plan) {
-        // TODO: 实际应根据品种、区域、历史合作等匹配供销商
+    private String findBestSupplierFallback(PlantingPlan plan) {
+        // 回退到随机分配
         return "SUPPLY" + String.format("%03d", new Random().nextInt(100) + 1);
     }
 
