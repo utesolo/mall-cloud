@@ -66,3 +66,73 @@ INSERT INTO `planting_plan` (`id`, `plan_id`, `farmer_id`, `planting_area`, `var
 (2, 'PLAN202310020002', 'FARMER002', 50.00, '优质小麦', 25000, '2023-10-15', '食用加工', '河南郑州·优质小麦·50.0亩·预计产量25000个·用于食用加工', '河南郑州', 92, 'SUPPLY003', '2023-10-02 09:20:00', '当前河南地区适合优质小麦种植', 'MATCHED', '2023-09-20 14:30:00'),
 (3, 'PLAN202312080003', 'FARMER001', 15.00, '草莓', 8000, '2024-03-01', '鲜食销售', '北京大兴·草莓·15.0亩·预计产量8000个·用于鲜食销售', '北京大兴', NULL, NULL, NULL, NULL, 'PENDING', '2024-12-08 11:00:00'),
 (4, 'PLAN202312100004', 'FARMER003', 100.00, '水稻', 80000, '2024-04-20', '粮食储备', '江苏南京·水稻·100.0亩·预计产量80000个·用于粮食储备', '江苏南京', 78, 'SUPPLY002', '2024-12-10 16:45:00', '当前江苏地区适合水稻种植', 'MATCHED', '2024-12-05 08:30:00');
+
+-- 用户行为埋点事件表（用于收集训练数据）
+CREATE TABLE `user_tracking_event` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `event_id` VARCHAR(64) NOT NULL COMMENT '事件ID（业务唯一标识）',
+  `user_id` VARCHAR(64) DEFAULT NULL COMMENT '用户ID',
+  `user_type` VARCHAR(20) DEFAULT NULL COMMENT '用户类型: FARMER-农户, SUPPLIER-供销商',
+  `event_type` VARCHAR(50) NOT NULL COMMENT '事件类型: PRODUCT_VIEW/PRODUCT_CLICK/MATCH_VIEW/MATCH_CLICK/MATCH_CONFIRM/ORDER_CREATE',
+  
+  -- 关联ID
+  `plan_id` VARCHAR(32) DEFAULT NULL COMMENT '种植计划ID',
+  `product_id` BIGINT DEFAULT NULL COMMENT '商品ID',
+  `supplier_id` VARCHAR(32) DEFAULT NULL COMMENT '供销商ID',
+  
+  -- 匹配特征快照（用于训练）
+  `variety_score` DECIMAL(5,2) DEFAULT NULL COMMENT '品种一致性得分(0-100)',
+  `region_score` DECIMAL(5,2) DEFAULT NULL COMMENT '区域适配得分(0-100)',
+  `climate_score` DECIMAL(5,2) DEFAULT NULL COMMENT '气候匹配得分(0-100)',
+  `season_score` DECIMAL(5,2) DEFAULT NULL COMMENT '季节匹配得分(0-100)',
+  `quality_score` DECIMAL(5,2) DEFAULT NULL COMMENT '种子质量得分(0-100)',
+  `intent_score` DECIMAL(5,2) DEFAULT NULL COMMENT '供需意图得分(0-100)',
+  `total_score` DECIMAL(5,2) DEFAULT NULL COMMENT '综合得分(0-100)',
+  `match_grade` VARCHAR(5) DEFAULT NULL COMMENT '匹配等级: A/B/C/D',
+  
+  -- 上下文信息
+  `device_type` VARCHAR(20) DEFAULT NULL COMMENT '用户设备类型: PC/MOBILE/TABLET',
+  `channel` VARCHAR(50) DEFAULT NULL COMMENT '用户来源渠道',
+  `stay_duration` INT DEFAULT NULL COMMENT '页面停留时长(秒)',
+  `is_positive` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否为正样本: 1=用户确认/购买, 0=仅浏览',
+  
+  -- 时间戳
+  `event_time` DATETIME NOT NULL COMMENT '事件发生时间',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `ext_data` TEXT DEFAULT NULL COMMENT '扩展数据(JSON格式)',
+  
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_event_id` (`event_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_plan_id` (`plan_id`),
+  KEY `idx_product_id` (`product_id`),
+  KEY `idx_event_type` (`event_type`),
+  KEY `idx_event_time` (`event_time`),
+  KEY `idx_is_positive` (`is_positive`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户行为埋点事件表';
+
+-- Mock数据 - 埋点事件（训练数据样例）
+INSERT INTO `user_tracking_event` (
+  `event_id`, `user_id`, `user_type`, `event_type`, `plan_id`, `product_id`, `supplier_id`,
+  `variety_score`, `region_score`, `climate_score`, `season_score`, `quality_score`, `intent_score`,
+  `total_score`, `match_grade`, `device_type`, `channel`, `stay_duration`, `is_positive`, `event_time`
+) VALUES
+-- 正样本（用户确认匹配）
+('EVT202312101001', 'FARMER001', 'FARMER', 'MATCH_CONFIRM', 'PLAN202310010001', 1, 'SUPPLY001',
+ 95.00, 100.00, 88.50, 100.00, 92.00, 85.00, 93.42, 'A', 'MOBILE', 'wechat_mini', 45, 1, '2023-10-01 14:30:00'),
+ 
+('EVT202312101002', 'FARMER002', 'FARMER', 'MATCH_CONFIRM', 'PLAN202310020002', 5, 'SUPPLY003',
+ 100.00, 80.00, 92.00, 100.00, 95.00, 90.00, 94.50, 'A', 'MOBILE', 'wechat_mini', 30, 1, '2023-10-02 09:20:00'),
+
+-- 负样本（用户仅浏览未确认）
+('EVT202312101003', 'FARMER001', 'FARMER', 'MATCH_VIEW', 'PLAN202312080003', 3, NULL,
+ 70.00, 100.00, 75.00, 70.00, 80.00, 60.00, 75.50, 'B', 'MOBILE', 'wechat_mini', 15, 0, '2024-12-08 11:10:00'),
+ 
+('EVT202312101004', 'FARMER001', 'FARMER', 'MATCH_CLICK', 'PLAN202312080003', 4, NULL,
+ 60.00, 80.00, 78.00, 70.00, 75.00, 55.00, 69.80, 'B', 'MOBILE', 'wechat_mini', 8, 0, '2024-12-08 11:12:00'),
+
+('EVT202312101005', 'FARMER003', 'FARMER', 'MATCH_VIEW', 'PLAN202312100004', 5, NULL,
+ 100.00, 100.00, 85.00, 100.00, 90.00, 80.00, 93.00, 'A', 'PC', 'web', 60, 0, '2024-12-10 16:40:00'),
+
+('EVT202312101006', 'FARMER003', 'FARMER', 'MATCH_CLICK', 'PLAN202312100004', 5, 'SUPPLY002',
+ 100.00, 100.00, 85.00, 100.00, 90.00, 80.00, 93.00, 'A', 'PC', 'web', 120, 1, '2024-12-10 16:45:00');
