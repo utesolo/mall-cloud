@@ -1,0 +1,22 @@
+# 种植计划匹配模型训练环境依赖
+
+# 数据处理
+pandas>=2.0.0
+numpy>=1.24.0
+
+# 机器学习
+scikit-learn>=1.3.0
+joblib>=1.3.0
+
+# 可视化 (可选)
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# API服务 (可选，用于模型部署)
+fastapi>=0.100.0
+uvicorn>=0.23.0
+pydantic>=2.0.0
+
+# 深度学习扩展 (可选)
+# torch>=2.0.0
+# tensorflow>=2.13.0
