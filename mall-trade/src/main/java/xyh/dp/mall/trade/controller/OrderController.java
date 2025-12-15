@@ -24,6 +24,7 @@ import xyh.dp.mall.trade.vo.OrderVO;
 @RequiredArgsConstructor
 @Tag(name = "订单接口", description = "订单创建、查询、取消等接口")
 public class OrderController {
+    // TODO 通过微信小程序来实现支付，支付在小程序完成，返回给后端一个结果
 
     private final OrderService orderService;
 
