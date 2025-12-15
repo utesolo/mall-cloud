@@ -1,13 +1,43 @@
-mall-cloud/
-├── mall-common/                  # 全局公共模块 (工具类、常量、通用返回对象)
-├── mall-gateway/                 # Spring Cloud Gateway (API网关)
-├── mall-auth/                    # 认证授权服务 (微信登录、JWT签发)
-├── mall-product/                 # 商品服务 (管理商品、分类、品牌)
-├── mall-file/                    # 文件服务 (上传图片、视频到OSS/MinIO)
-├── mall-trade/                   # 交易服务 (购物车、订单、支付回调)
-├── mall-search/                  # 搜索服务 (Elasticsearch, 商品搜索)
-├── mall-job/                     # 定时任务服务 (处理过期订单、数据统计)
+mail-cloud/
 │
-├── mall-eureka/                  # 注册中心 (Eureka Server)
-├── mall-config/                  # 配置中心 (Spring Cloud Config / Nacos Config)
-└── mall-zipkin/                  # 链路追踪 (Sleuth + Zipkin)
+├── .git/                           # Git 版本控制目录
+├── .gitattributes                  # Git 属性配置
+├── .gitignore                      # Git 忽略文件配置
+├── .mvn/                           # Maven Wrapper 配置目录
+├── .qoder/                         # Qoder AI 配置目录
+│
+├── AGENTS.md                       # AI Agent 指令文档
+├── LICENSE                         # 开源许可证
+├── README.md                       # 项目说明文档
+├── catalogue.md                    # 项目目录说明
+├── 原型设计.md                      # 原型设计文档
+│
+├── pom.xml                         # Maven 父项目配置
+├── mvnw                            # Maven Wrapper 脚本(Unix)
+├── mvnw.cmd                        # Maven Wrapper 脚本(Windows)
+│
+├── mall-auth/                      # 认证服务模块(微信登录、JWT)
+├── mall-common/                    # 公共模块(工具类、异常处理、统一返回)
+├── mall-config/                    # 配置中心模块(Nacos配置)
+├── mall-file/                      # 文件服务模块
+├── mall-gateway/                   # 网关服务模块(Spring Cloud Gateway)
+├── mall-job/                       # 定时任务模块
+├── mall-product/                   # 商品服务模块(商品、分类管理)
+├── mall-search/                    # 搜索服务模块(Elasticsearch)
+├── mall-trade/                     # 交易服务模块(订单、种植计划、匹配)
+├── mall-zipkin/                    # 链路追踪模块(Zipkin)
+│
+├── ml/                             # 机器学习模块(Python)
+│   ├── inference_server.py         # 推理服务器
+│   ├── requirements.txt            # Python 依赖
+│   └── train_matching_model.py     # 模型训练脚本
+│
+├── qoder/                          # Qoder 规则目录
+│   └── rules/
+│       └── version.md
+│
+└── sql/                            # SQL 脚本目录
+├── mall_auth.sql               # 认证服务数据库
+├── mall_job.sql                # 定时任务数据库
+├── mall_product.sql            # 商品服务数据库
+└── mall_trade.sql              # 交易服务数据库
