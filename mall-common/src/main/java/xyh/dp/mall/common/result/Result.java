@@ -116,4 +116,8 @@ public class Result<T> implements Serializable {
         result.setMessage(message);
         return result;
     }
+
+    public boolean isSuccess() {
+        return  true;
+    }
 }
