@@ -613,7 +613,7 @@ class MatchFeatureExtractorTest {
 
             // Given - C级
             MatchFeature featureC = MatchFeature.builder()
-                    .totalScore(new BigDecimal("65"))
+                    .totalScore(new BigDecimal("59"))
                     .build();
             assertThat(featureC.calculateGrade()).isEqualTo("C");
 
@@ -632,6 +632,8 @@ class MatchFeatureExtractorTest {
         void matchFeature_toCsvLine_shouldReturnCsvFormat() {
             // Given
             MatchFeature feature = MatchFeature.builder()
+                    .planId("PLAN202310010001")
+                    .productId(1L)
                     .varietyScore(new BigDecimal("90"))
                     .regionScore(new BigDecimal("80"))
                     .climateScore(new BigDecimal("85"))
@@ -647,7 +649,7 @@ class MatchFeatureExtractorTest {
             assertThat(csvLine).contains("90");
             assertThat(csvLine).contains("80");
             assertThat(csvLine).contains("85");
-            assertThat(csvLine.split(",")).hasSize(6);
+            assertThat(csvLine.split(",")).hasSize(10);
         }
 
         /**

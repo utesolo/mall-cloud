@@ -222,14 +222,14 @@ class OrderServiceTest {
         void cancelOrder_pendingOrder_shouldSucceed() {
             // Given
             when(orderMapper.selectOne(any())).thenReturn(testOrder);
-            when(orderMapper.updateById(any())).thenReturn(1);
+            when(orderMapper.updateById((Order)any())).thenReturn(1);
             when(productFeignClient.restoreStock(anyLong(), anyInt())).thenReturn(Result.success(true));
 
             // When
             orderService.cancelOrder("ORD202412150001", 1L);
 
             // Then
-            verify(orderMapper, times(1)).updateById(any());
+            verify(orderMapper, times(1)).updateById((Order)any());
         }
 
         /**

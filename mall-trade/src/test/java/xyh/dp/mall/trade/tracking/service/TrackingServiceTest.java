@@ -106,13 +106,13 @@ class TrackingServiceTest {
         @DisplayName("应成功记录浏览事件")
         void trackEvent_viewEvent_shouldInsertEvent() {
             // Given
-            when(eventMapper.insert(any())).thenReturn(1);
+            when(eventMapper.insert((UserTrackingEvent) any())).thenReturn(1);
 
             // When
             trackingService.trackEvent(eventDTO);
 
             // Then
-            verify(eventMapper, times(1)).insert(any());
+            verify(eventMapper, times(1)).insert((UserTrackingEvent) any());
         }
 
         /**
@@ -407,7 +407,7 @@ class TrackingServiceTest {
             // Given
             UserTrackingEvent event = UserTrackingEvent.builder()
                     .eventId("EVT202412150001")
-                    .userId(1L)
+                    .userId(String.valueOf(1L))
                     .userType("FARMER")
                     .eventType("MATCH_VIEW")
                     .planId("PLAN001")
@@ -438,7 +438,7 @@ class TrackingServiceTest {
         @DisplayName("数据库异常应被捕获不影响主流程")
         void trackEvent_dbException_shouldNotThrow() {
             // Given
-            when(eventMapper.insert(any())).thenThrow(new RuntimeException("DB Error"));
+            when(eventMapper.insert((UserTrackingEvent) any())).thenThrow(new RuntimeException("DB Error"));
 
             // When/Then - should not throw
             trackingService.trackEvent(eventDTO);

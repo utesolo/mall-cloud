@@ -72,7 +72,7 @@ class PlantingPlanServiceTest {
     void setUp() {
         createDTO = new CreatePlantingPlanDTO();
         createDTO.setFarmerId("FARMER001");
-        createDTO.setPlantingArea(10.5);
+        createDTO.setPlantingArea(BigDecimal.valueOf(10.5));
         createDTO.setVariety("济麦22");
         createDTO.setExpectedYield(5000);
         createDTO.setPlantingDate(LocalDate.of(2025, 3, 15));
@@ -83,7 +83,7 @@ class PlantingPlanServiceTest {
         testPlan.setId(1L);
         testPlan.setPlanId("PLAN202412150001");
         testPlan.setFarmerId("FARMER001");
-        testPlan.setPlantingArea(10.5);
+        testPlan.setPlantingArea(BigDecimal.valueOf(10.5));
         testPlan.setVariety("济麦22");
         testPlan.setExpectedYield(5000);
         testPlan.setPlantingDate(LocalDate.of(2025, 3, 15));
@@ -128,7 +128,7 @@ class PlantingPlanServiceTest {
         @DisplayName("应成功创建种植计划")
         void createPlan_shouldSucceed() {
             // Given
-            when(plantingPlanMapper.insert(any())).thenReturn(1);
+            when(plantingPlanMapper.insert((PlantingPlan) any())).thenReturn(1);
 
             // When
             PlantingPlanVO result = plantingPlanService.createPlan(createDTO);
@@ -141,7 +141,7 @@ class PlantingPlanServiceTest {
             assertThat(result.getMatchStatus()).isEqualTo("PENDING");
             assertThat(result.getPlanSummary()).contains("山东菏泽");
             assertThat(result.getPlanSummary()).contains("济麦22");
-            verify(plantingPlanMapper, times(1)).insert(any());
+            verify(plantingPlanMapper, times(1)).insert((PlantingPlan) any());
         }
 
         /**
@@ -151,7 +151,7 @@ class PlantingPlanServiceTest {
         @DisplayName("应正确生成计划摘要")
         void createPlan_shouldGenerateCorrectSummary() {
             // Given
-            when(plantingPlanMapper.insert(any())).thenReturn(1);
+            when(plantingPlanMapper.insert((PlantingPlan) any())).thenReturn(1);
 
             // When
             PlantingPlanVO result = plantingPlanService.createPlan(createDTO);
@@ -231,7 +231,7 @@ class PlantingPlanServiceTest {
             when(productFeignClient.searchProducts(anyString(), anyString(), anyInt()))
                     .thenReturn(Result.success(Arrays.asList()));
             when(matchScoreCalculator.findBestMatch(any(), any())).thenReturn(null);
-            when(plantingPlanMapper.updateById(any())).thenReturn(1);
+            when(plantingPlanMapper.updateById((PlantingPlan) any())).thenReturn(1);
 
             // When
             PlantingPlanVO result = plantingPlanService.executeMatch("PLAN202412150001");
@@ -256,13 +256,13 @@ class PlantingPlanServiceTest {
             // Given
             testPlan.setMatchStatus("MATCHED");
             when(plantingPlanMapper.selectOne(any())).thenReturn(testPlan);
-            when(plantingPlanMapper.updateById(any())).thenReturn(1);
+            when(plantingPlanMapper.updateById((PlantingPlan) any())).thenReturn(1);
 
             // When
             plantingPlanService.confirmMatch("PLAN202412150001", "FARMER001");
 
             // Then
-            verify(plantingPlanMapper, times(1)).updateById(any());
+            verify(plantingPlanMapper, times(1)).updateById((PlantingPlan) any());
         }
 
         /**
@@ -310,13 +310,13 @@ class PlantingPlanServiceTest {
         void cancelPlan_pendingPlan_shouldSucceed() {
             // Given
             when(plantingPlanMapper.selectOne(any())).thenReturn(testPlan);
-            when(plantingPlanMapper.updateById(any())).thenReturn(1);
+            when(plantingPlanMapper.updateById((PlantingPlan) any())).thenReturn(1);
 
             // When
             plantingPlanService.cancelPlan("PLAN202412150001", "FARMER001");
 
             // Then
-            verify(plantingPlanMapper, times(1)).updateById(any());
+            verify(plantingPlanMapper, times(1)).updateById((PlantingPlan) any());
         }
 
         /**
