@@ -19,6 +19,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegionClimateData {
+    // TODO 将天气修改为API获取
 
     /**
      * 区域名称
@@ -159,7 +160,7 @@ public class RegionClimateData {
         
         Map<String, String[]> majorRegionMap = new HashMap<>();
         majorRegionMap.put("华北", new String[]{"北京", "天津", "河北", "山西", "内蒙古"});
-        majorRegionMap.put("华东", new String[]{"上海", "江苏", "浙江", "安徽", "福建", "江西", "山东"});
+        majorRegionMap.put("华东", new String[]{"上海", "江苏", "浙江", "安徽", "福建"  , "江西", "山东"});
         majorRegionMap.put("华中", new String[]{"河南", "湖北", "湖南"});
         majorRegionMap.put("华南", new String[]{"广东", "广西", "海南"});
         majorRegionMap.put("西南", new String[]{"重庆", "四川", "贵州", "云南", "西藏"});
