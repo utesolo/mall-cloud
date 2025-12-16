@@ -253,14 +253,14 @@ class ProductServiceTest {
         void restoreStock_existingProduct_shouldSucceed() {
             // Given
             when(productMapper.selectById(1L)).thenReturn(testProduct);
-            when(productMapper.updateById(any())).thenReturn(1);
+            when(productMapper.updateById((Product) any())).thenReturn(1);
 
             // When
             boolean result = productService.restoreStock(1L, 10);
 
             // Then
             assertThat(result).isTrue();
-            verify(productMapper, times(1)).updateById(any());
+            verify(productMapper, times(1)).updateById((Product) any());
         }
 
         /**
@@ -292,14 +292,14 @@ class ProductServiceTest {
         void increaseSales_existingProduct_shouldSucceed() {
             // Given
             when(productMapper.selectById(1L)).thenReturn(testProduct);
-            when(productMapper.updateById(any())).thenReturn(1);
+            when(productMapper.updateById((Product) any())).thenReturn(1);
 
             // When
             boolean result = productService.increaseSales(1L, 5);
 
             // Then
             assertThat(result).isTrue();
-            verify(productMapper, times(1)).updateById(any());
+            verify(productMapper, times(1)).updateById((Product) any());
         }
 
         /**
@@ -311,7 +311,7 @@ class ProductServiceTest {
             // Given
             testProduct.setSales(null);
             when(productMapper.selectById(1L)).thenReturn(testProduct);
-            when(productMapper.updateById(any())).thenReturn(1);
+            when(productMapper.updateById((Product) any())).thenReturn(1);
 
             // When
             boolean result = productService.increaseSales(1L, 5);
