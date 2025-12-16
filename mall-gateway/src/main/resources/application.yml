@@ -13,22 +13,32 @@ spring:
       server:
         webflux:
           routes:
+            # Auth Service
             - id: mall-auth
               uri: lb://mall-auth
               predicates:
                 - Path=/auth/**
+            # Product Service
             - id: mall-product
               uri: lb://mall-product
               predicates:
                 - Path=/product/**
+            # File Service
             - id: mall-file
               uri: lb://mall-file
               predicates:
                 - Path=/file/**
-            - id: mall-trade
+            # Trade Service - Order
+            - id: mall-trade-order
               uri: lb://mall-trade
               predicates:
-                - Path=/trade/**
+                - Path=/order/**
+            # Trade Service - Planting Plan
+            - id: mall-trade-planting-plan
+              uri: lb://mall-trade
+              predicates:
+                - Path=/planting-plan/**
+            # Search Service
             - id: mall-search
               uri: lb://mall-search
               predicates:
