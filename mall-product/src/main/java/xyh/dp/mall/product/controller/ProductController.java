@@ -4,10 +4,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import xyh.dp.mall.common.annotation.RequireLogin;
 import xyh.dp.mall.common.result.Result;
+import xyh.dp.mall.product.dto.ProductCreateDTO;
+import xyh.dp.mall.product.dto.ProductUpdateDTO;
+import xyh.dp.mall.product.dto.StockUpdateDTO;
 import xyh.dp.mall.product.entity.Category;
 import xyh.dp.mall.product.service.ProductService;
 import xyh.dp.mall.product.vo.ProductVO;
@@ -25,9 +30,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/product")
 @RequiredArgsConstructor
-@Tag(name = "商品接口", description = "商品查询、分类查询等接口")
+@Tag(name = "商品接口", description = "商品查询、分类查询、商家管理等接口")
 public class ProductController {
-    // TODO 商品添加，修改，删除
 
     private final ProductService productService;
 
@@ -81,6 +85,119 @@ public class ProductController {
     public Result<List<Category>> getCategoryList() {
         List<Category> categoryList = productService.getCategoryList();
         return Result.success(categoryList);
+    }
+
+    // ==================== 商家商品管理接口 ====================
+
+    /**
+     * 商家新增商品
+     *
+     * @param dto 商品创建请求
+     * @return 创建的商品ID
+     */
+    @PostMapping("/manage/create")
+    @RequireLogin
+    @Operation(summary = "新增商品", description = "商家新增商品，需要登录")
+    public Result<Long> createProduct(@Valid @RequestBody ProductCreateDTO dto) {
+        log.info("商家新增商品请求: {}", dto.getName());
+        Long productId = productService.createProduct(dto);
+        return Result.success(productId);
+    }
+
+    /**
+     * 商家更新商品信息
+     *
+     * @param dto 商品更新请求
+     * @return 操作结果
+     */
+    @PutMapping("/manage/update")
+    @RequireLogin
+    @Operation(summary = "更新商品", description = "商家更新商品信息，需要登录")
+    public Result<Void> updateProduct(@Valid @RequestBody ProductUpdateDTO dto) {
+        log.info("商家更新商品请求: id={}", dto.getId());
+        productService.updateProduct(dto);
+        return Result.success();
+    }
+
+    /**
+     * 商家删除商品
+     *
+     * @param id 商品ID
+     * @return 操作结果
+     */
+    @DeleteMapping("/manage/{id}")
+    @RequireLogin
+    @Operation(summary = "删除商品", description = "商家删除商品（逻辑删除），需要登录")
+    public Result<Void> deleteProduct(@Parameter(description = "商品ID") @PathVariable Long id) {
+        log.info("商家删除商品请求: id={}", id);
+        productService.deleteProduct(id);
+        return Result.success();
+    }
+
+    /**
+     * 商家上架商品
+     *
+     * @param id 商品ID
+     * @return 操作结果
+     */
+    @PutMapping("/manage/{id}/on-sale")
+    @RequireLogin
+    @Operation(summary = "上架商品", description = "商家上架商品，需要登录")
+    public Result<Void> onSaleProduct(@Parameter(description = "商品ID") @PathVariable Long id) {
+        log.info("商家上架商品请求: id={}", id);
+        productService.onSaleProduct(id);
+        return Result.success();
+    }
+
+    /**
+     * 商家下架商品
+     *
+     * @param id 商品ID
+     * @return 操作结果
+     */
+    @PutMapping("/manage/{id}/off-sale")
+    @RequireLogin
+    @Operation(summary = "下架商品", description = "商家下架商品，需要登录")
+    public Result<Void> offSaleProduct(@Parameter(description = "商品ID") @PathVariable Long id) {
+        log.info("商家下架商品请求: id={}", id);
+        productService.offSaleProduct(id);
+        return Result.success();
+    }
+
+    /**
+     * 商家调整库存
+     *
+     * @param dto 库存更新请求
+     * @return 操作结果
+     */
+    @PutMapping("/manage/stock")
+    @RequireLogin
+    @Operation(summary = "调整库存", description = "商家调整商品库存，需要登录")
+    public Result<Void> updateStock(@Valid @RequestBody StockUpdateDTO dto) {
+        log.info("商家调整库存请求: productId={}, type={}, quantity={}",
+                dto.getProductId(), dto.getOperationType(), dto.getQuantity());
+        productService.updateStock(dto);
+        return Result.success();
+    }
+
+    /**
+     * 查询商家自己的商品列表
+     *
+     * @param pageNum  页码
+     * @param pageSize 每页数量
+     * @param status   商品状态
+     * @return 商品分页数据
+     */
+    @GetMapping("/manage/my-products")
+    @RequireLogin
+    @Operation(summary = "查询我的商品", description = "商家查询自己的商品列表，需要登录")
+    public Result<Page<ProductVO>> getMyProducts(
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer pageNum,
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") Integer pageSize,
+            @Parameter(description = "商品状态: ON_SALE-上架, OFF_SALE-下架") @RequestParam(required = false) String status
+    ) {
+        Page<ProductVO> page = productService.pageMyProducts(pageNum, pageSize, status);
+        return Result.success(page);
     }
 
     // ==================== 库存管理接口（供Feign调用） ====================

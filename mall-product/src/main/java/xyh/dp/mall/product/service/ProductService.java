@@ -8,7 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import xyh.dp.mall.common.context.UserContextHolder;
 import xyh.dp.mall.common.exception.BusinessException;
+import xyh.dp.mall.product.dto.ProductCreateDTO;
+import xyh.dp.mall.product.dto.ProductUpdateDTO;
+import xyh.dp.mall.product.dto.StockUpdateDTO;
 import xyh.dp.mall.product.entity.Category;
 import xyh.dp.mall.product.entity.Product;
 import xyh.dp.mall.product.mapper.CategoryMapper;
@@ -16,6 +20,7 @@ import xyh.dp.mall.product.mapper.ProductMapper;
 import xyh.dp.mall.product.vo.ProductVO;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +42,406 @@ public class ProductService {
 
     private final ProductMapper productMapper;
     private final CategoryMapper categoryMapper;
+
+    // ==================== 商家商品管理接口 ====================
+
+    /**
+     * 商家新增商品
+     *
+     * @param dto 商品创建请求
+     * @return 创建的商品ID
+     * @throws BusinessException 分类不存在时抛出
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Long createProduct(ProductCreateDTO dto) {
+        log.info("商家新增商品: {}", dto.getName());
+
+        // 校验分类是否存在
+        Category category = categoryMapper.selectById(dto.getCategoryId());
+        if (category == null) {
+            throw new BusinessException("商品分类不存在");
+        }
+
+        // 获取当前登录用户作为供应商
+        Long supplierId = UserContextHolder.getUserId();
+
+        // 构建商品实体
+        Product product = buildProductFromCreateDTO(dto, supplierId);
+
+        productMapper.insert(product);
+        log.info("商品创建成功, id: {}, name: {}", product.getId(), product.getName());
+        return product.getId();
+    }
+
+    /**
+     * 商家更新商品信息
+     *
+     * @param dto 商品更新请求
+     * @throws BusinessException 商品不存在或无权操作时抛出
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void updateProduct(ProductUpdateDTO dto) {
+        log.info("商家更新商品: id={}", dto.getId());
+
+        Product product = productMapper.selectById(dto.getId());
+        if (product == null) {
+            throw new BusinessException("商品不存在");
+        }
+
+        // 校验商家权限
+        Long currentUserId = UserContextHolder.getUserId();
+        if (!product.getSupplierId().equals(currentUserId)) {
+            throw new BusinessException("无权操作此商品");
+        }
+
+        // 如果更新分类，校验分类是否存在
+        if (dto.getCategoryId() != null) {
+            Category category = categoryMapper.selectById(dto.getCategoryId());
+            if (category == null) {
+                throw new BusinessException("商品分类不存在");
+            }
+        }
+
+        // 更新商品信息
+        updateProductFromDTO(product, dto);
+        product.setUpdateTime(LocalDateTime.now());
+
+        productMapper.updateById(product);
+        log.info("商品更新成功, id: {}", product.getId());
+    }
+
+    /**
+     * 商家删除商品（逻辑删除，实际是下架）
+     *
+     * @param productId 商品ID
+     * @throws BusinessException 商品不存在或无权操作时抛出
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteProduct(Long productId) {
+        log.info("商家删除商品: id={}", productId);
+
+        Product product = productMapper.selectById(productId);
+        if (product == null) {
+            throw new BusinessException("商品不存在");
+        }
+
+        // 校验商家权限
+        Long currentUserId = UserContextHolder.getUserId();
+        if (!product.getSupplierId().equals(currentUserId)) {
+            throw new BusinessException("无权操作此商品");
+        }
+
+        // 逻辑删除：设置状态为下架
+        product.setStatus("DELETED");
+        product.setUpdateTime(LocalDateTime.now());
+        productMapper.updateById(product);
+
+        log.info("商品删除成功, id: {}", productId);
+    }
+
+    /**
+     * 商家上架商品
+     *
+     * @param productId 商品ID
+     * @throws BusinessException 商品不存在或无权操作时抛出
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void onSaleProduct(Long productId) {
+        log.info("商家上架商品: id={}", productId);
+        updateProductStatus(productId, "ON_SALE");
+    }
+
+    /**
+     * 商家下架商品
+     *
+     * @param productId 商品ID
+     * @throws BusinessException 商品不存在或无权操作时抛出
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void offSaleProduct(Long productId) {
+        log.info("商家下架商品: id={}", productId);
+        updateProductStatus(productId, "OFF_SALE");
+    }
+
+    /**
+     * 商家调整库存
+     *
+     * @param dto 库存更新请求
+     * @throws BusinessException 商品不存在、无权操作或库存不足时抛出
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void updateStock(StockUpdateDTO dto) {
+        log.info("商家调整库存: productId={}, operationType={}, quantity={}",
+                dto.getProductId(), dto.getOperationType(), dto.getQuantity());
+
+        Product product = productMapper.selectById(dto.getProductId());
+        if (product == null) {
+            throw new BusinessException("商品不存在");
+        }
+
+        // 校验商家权限
+        Long currentUserId = UserContextHolder.getUserId();
+        if (!product.getSupplierId().equals(currentUserId)) {
+            throw new BusinessException("无权操作此商品");
+        }
+
+        Integer newStock = calculateNewStock(product.getStock(), dto);
+        product.setStock(newStock);
+        product.setUpdateTime(LocalDateTime.now());
+        productMapper.updateById(product);
+
+        log.info("库存调整成功, productId: {}, oldStock: {}, newStock: {}",
+                dto.getProductId(), product.getStock(), newStock);
+    }
+
+    /**
+     * 查询商家自己的商品列表
+     *
+     * @param pageNum  页码
+     * @param pageSize 每页数量
+     * @param status   商品状态（可选）
+     * @return 商品分页数据
+     */
+    public Page<ProductVO> pageMyProducts(Integer pageNum, Integer pageSize, String status) {
+        Long supplierId = UserContextHolder.getUserId();
+        log.info("查询商家商品列表: supplierId={}, status={}", supplierId, status);
+
+        Page<Product> page = new Page<>(pageNum, pageSize);
+        LambdaQueryWrapper<Product> queryWrapper = new LambdaQueryWrapper<>();
+
+        // 只查询当前商家的商品
+        queryWrapper.eq(Product::getSupplierId, supplierId);
+
+        // 排除已删除商品
+        queryWrapper.ne(Product::getStatus, "DELETED");
+
+        // 状态筛选
+        if (StringUtils.hasText(status)) {
+            queryWrapper.eq(Product::getStatus, status);
+        }
+
+        // 按更新时间降序
+        queryWrapper.orderByDesc(Product::getUpdateTime);
+
+        Page<Product> productPage = productMapper.selectPage(page, queryWrapper);
+
+        // 转换为VO
+        Page<ProductVO> voPage = new Page<>(pageNum, pageSize, productPage.getTotal());
+        List<ProductVO> voList = productPage.getRecords().stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+        voPage.setRecords(voList);
+
+        return voPage;
+    }
+
+    /**
+     * 更新商品状态
+     *
+     * @param productId 商品ID
+     * @param status    目标状态
+     */
+    private void updateProductStatus(Long productId, String status) {
+        Product product = productMapper.selectById(productId);
+        if (product == null) {
+            throw new BusinessException("商品不存在");
+        }
+
+        Long currentUserId = UserContextHolder.getUserId();
+        if (!product.getSupplierId().equals(currentUserId)) {
+            throw new BusinessException("无权操作此商品");
+        }
+
+        product.setStatus(status);
+        product.setUpdateTime(LocalDateTime.now());
+        productMapper.updateById(product);
+        log.info("商品状态更新成功, id: {}, status: {}", productId, status);
+    }
+
+    /**
+     * 计算新库存数量
+     *
+     * @param currentStock 当前库存
+     * @param dto          库存操作请求
+     * @return 新库存数量
+     */
+    private Integer calculateNewStock(Integer currentStock, StockUpdateDTO dto) {
+        return switch (dto.getOperationType()) {
+            case "SET" -> dto.getQuantity();
+            case "ADD" -> currentStock + dto.getQuantity();
+            case "SUBTRACT" -> {
+                int newStock = currentStock - dto.getQuantity();
+                if (newStock < 0) {
+                    throw new BusinessException("库存不足，当前库存: " + currentStock);
+                }
+                yield newStock;
+            }
+            default -> throw new BusinessException("无效的操作类型: " + dto.getOperationType());
+        };
+    }
+
+    /**
+     * 从创建DTO构建商品实体
+     *
+     * @param dto        创建DTO
+     * @param supplierId 供应商ID
+     * @return 商品实体
+     */
+    private Product buildProductFromCreateDTO(ProductCreateDTO dto, Long supplierId) {
+        Product product = new Product();
+
+        // 基础信息
+        product.setName(dto.getName());
+        product.setCategoryId(dto.getCategoryId());
+        product.setMainImage(dto.getMainImage());
+        product.setDescription(dto.getDescription());
+        product.setSpecification(dto.getSpecification());
+        product.setPrice(dto.getPrice());
+        product.setStock(dto.getStock());
+        product.setSales(0);
+        product.setSupplierId(supplierId);
+        product.setStatus("OFF_SALE"); // 新商品默认下架状态
+
+        // 种子特有属性
+        product.setOrigin(dto.getOrigin());
+        product.setVariety(dto.getVariety());
+        product.setDifficulty(dto.getDifficulty());
+        product.setGrowthCycle(dto.getGrowthCycle());
+        product.setGerminationRate(dto.getGerminationRate());
+        product.setPurity(dto.getPurity());
+        product.setShelfLife(dto.getShelfLife());
+        product.setProductionDate(dto.getProductionDate());
+
+        // 种植环境
+        product.setMinTemperature(dto.getMinTemperature());
+        product.setMaxTemperature(dto.getMaxTemperature());
+        product.setMinHumidity(dto.getMinHumidity());
+        product.setMaxHumidity(dto.getMaxHumidity());
+        product.setMinPh(dto.getMinPh());
+        product.setMaxPh(dto.getMaxPh());
+        product.setLightRequirement(dto.getLightRequirement());
+
+        // JSON字段
+        if (dto.getImages() != null && !dto.getImages().isEmpty()) {
+            product.setImages(JSON.toJSONString(dto.getImages()));
+        }
+        if (dto.getRegions() != null && !dto.getRegions().isEmpty()) {
+            product.setRegions(JSON.toJSONString(dto.getRegions()));
+        }
+        if (dto.getPlantingSeasons() != null && !dto.getPlantingSeasons().isEmpty()) {
+            product.setPlantingSeasons(JSON.toJSONString(dto.getPlantingSeasons()));
+        }
+
+        // 质量溯源
+        product.setTraceCode(dto.getTraceCode());
+        product.setBatchNumber(dto.getBatchNumber());
+        product.setInspectionReportUrl(dto.getInspectionReportUrl());
+
+        // 时间戳
+        product.setCreateTime(LocalDateTime.now());
+        product.setUpdateTime(LocalDateTime.now());
+
+        return product;
+    }
+
+    /**
+     * 从更新DTO更新商品实体
+     *
+     * @param product 商品实体
+     * @param dto     更新DTO
+     */
+    private void updateProductFromDTO(Product product, ProductUpdateDTO dto) {
+        // 基础信息（非空才更新）
+        if (StringUtils.hasText(dto.getName())) {
+            product.setName(dto.getName());
+        }
+        if (dto.getCategoryId() != null) {
+            product.setCategoryId(dto.getCategoryId());
+        }
+        if (dto.getMainImage() != null) {
+            product.setMainImage(dto.getMainImage());
+        }
+        if (dto.getDescription() != null) {
+            product.setDescription(dto.getDescription());
+        }
+        if (dto.getSpecification() != null) {
+            product.setSpecification(dto.getSpecification());
+        }
+        if (dto.getPrice() != null) {
+            product.setPrice(dto.getPrice());
+        }
+
+        // 种子特有属性
+        if (dto.getOrigin() != null) {
+            product.setOrigin(dto.getOrigin());
+        }
+        if (dto.getVariety() != null) {
+            product.setVariety(dto.getVariety());
+        }
+        if (dto.getDifficulty() != null) {
+            product.setDifficulty(dto.getDifficulty());
+        }
+        if (dto.getGrowthCycle() != null) {
+            product.setGrowthCycle(dto.getGrowthCycle());
+        }
+        if (dto.getGerminationRate() != null) {
+            product.setGerminationRate(dto.getGerminationRate());
+        }
+        if (dto.getPurity() != null) {
+            product.setPurity(dto.getPurity());
+        }
+        if (dto.getShelfLife() != null) {
+            product.setShelfLife(dto.getShelfLife());
+        }
+        if (dto.getProductionDate() != null) {
+            product.setProductionDate(dto.getProductionDate());
+        }
+
+        // 种植环境
+        if (dto.getMinTemperature() != null) {
+            product.setMinTemperature(dto.getMinTemperature());
+        }
+        if (dto.getMaxTemperature() != null) {
+            product.setMaxTemperature(dto.getMaxTemperature());
+        }
+        if (dto.getMinHumidity() != null) {
+            product.setMinHumidity(dto.getMinHumidity());
+        }
+        if (dto.getMaxHumidity() != null) {
+            product.setMaxHumidity(dto.getMaxHumidity());
+        }
+        if (dto.getMinPh() != null) {
+            product.setMinPh(dto.getMinPh());
+        }
+        if (dto.getMaxPh() != null) {
+            product.setMaxPh(dto.getMaxPh());
+        }
+        if (dto.getLightRequirement() != null) {
+            product.setLightRequirement(dto.getLightRequirement());
+        }
+
+        // JSON字段
+        if (dto.getImages() != null) {
+            product.setImages(JSON.toJSONString(dto.getImages()));
+        }
+        if (dto.getRegions() != null) {
+            product.setRegions(JSON.toJSONString(dto.getRegions()));
+        }
+        if (dto.getPlantingSeasons() != null) {
+            product.setPlantingSeasons(JSON.toJSONString(dto.getPlantingSeasons()));
+        }
+
+        // 质量溯源
+        if (dto.getTraceCode() != null) {
+            product.setTraceCode(dto.getTraceCode());
+        }
+        if (dto.getBatchNumber() != null) {
+            product.setBatchNumber(dto.getBatchNumber());
+        }
+        if (dto.getInspectionReportUrl() != null) {
+            product.setInspectionReportUrl(dto.getInspectionReportUrl());
+        }
+    }
 
     /**
      * 分页查询商品列表
