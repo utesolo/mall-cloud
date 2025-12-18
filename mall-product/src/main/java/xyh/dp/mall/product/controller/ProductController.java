@@ -200,7 +200,28 @@ public class ProductController {
         return Result.success(page);
     }
 
-    // ==================== 库存管理接口（供Feign调用） ====================
+    // ==================== 内部接口（供Feign调用） ====================
+
+    /**
+     * 搜索匹配候选商品
+     * 内部接口，供异步匹配服务通过Feign调用
+     *
+     * @param variety 品种关键词
+     * @param region 区域关键词
+     * @param limit 返回数量限制
+     * @return 商品列表
+     */
+    @GetMapping("/search/match")
+    @Operation(summary = "搜索匹配候选商品", description = "内部接口，供异步匹配服务调用")
+    public Result<List<ProductVO>> searchForMatch(
+            @Parameter(description = "品种关键词") @RequestParam(required = false) String variety,
+            @Parameter(description = "区域关键词") @RequestParam(required = false) String region,
+            @Parameter(description = "返回数量限制") @RequestParam(defaultValue = "20") Integer limit
+    ) {
+        log.info("搜索匹配候选商品: variety={}, region={}, limit={}", variety, region, limit);
+        List<ProductVO> products = productService.searchForMatch(variety, region, limit);
+        return Result.success(products);
+    }
 
     /**
      * 扣减商品库存

@@ -589,6 +589,48 @@ public class ProductService {
     }
 
     /**
+     * 搜索匹配候选商品
+     * 根据品种和区域搜索上架商品，供异步匹配服务调用
+     *
+     * @param variety 品种关键词（可选）
+     * @param region 区域关键词（可选）
+     * @param limit 返回数量限制
+     * @return 商品列表
+     */
+    public List<ProductVO> searchForMatch(String variety, String region, Integer limit) {
+        log.info("搜索匹配候选商品: variety={}, region={}, limit={}", variety, region, limit);
+
+        LambdaQueryWrapper<Product> queryWrapper = new LambdaQueryWrapper<>();
+
+        // 只查询上架商品
+        queryWrapper.eq(Product::getStatus, "ON_SALE");
+
+        // 品种筛选
+        if (StringUtils.hasText(variety)) {
+            queryWrapper.like(Product::getVariety, variety);
+        }
+
+        // 区域筛选
+        if (StringUtils.hasText(region)) {
+            queryWrapper.like(Product::getRegions, region);
+        }
+
+        // 按销量降序，优先匹配热门商品
+        queryWrapper.orderByDesc(Product::getSales);
+
+        // 限制返回数量
+        queryWrapper.last("LIMIT " + limit);
+
+        List<Product> products = productMapper.selectList(queryWrapper);
+
+        log.info("搜索到候选商品: {} 个", products.size());
+
+        return products.stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * 增加商品销量
      * 
      * @param productId 商品ID
