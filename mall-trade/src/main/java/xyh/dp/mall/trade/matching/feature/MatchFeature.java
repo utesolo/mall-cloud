@@ -33,6 +33,18 @@ public class MatchFeature implements Serializable {
     @Schema(description = "商品ID")
     private Long productId;
 
+    @Schema(description = "Product name")
+    private String productName;
+
+    @Schema(description = "Supplier ID")
+    private Long supplierId;
+
+    @Schema(description = "Product price")
+    private BigDecimal price;
+
+    @Schema(description = "Product stock")
+    private Integer stock;
+
     // ==================== 6维特征 ====================
 
     /**
