@@ -117,6 +117,18 @@ public class Result<T> implements Serializable {
         return result;
     }
 
+    /**
+     * 失败返回结果
+     *
+     * @param message 错误消息
+     * @param <T> 数据类型
+     * @return 失败结果
+     */
+    public static <T> Result<T> fail(String message){
+        return error(501, message);
+    }
+
+
     public boolean isSuccess() {
         return  true;
     }
