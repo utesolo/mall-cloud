@@ -18,6 +18,11 @@ import java.util.Map;
 public class JwtUtil {
 
     /**
+     * HS256算法要求的最小密钥长度（字节）
+     */
+    private static final int MIN_SECRET_KEY_LENGTH = 32;
+
+    /**
      * 生成JWT Token
      * 
      * @param subject 主题(通常是用户ID)
@@ -27,7 +32,7 @@ public class JwtUtil {
      * @return JWT Token
      */
     public static String generateToken(String subject, Map<String, Object> claims, String secret, long expiration) {
-        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        SecretKey key = getSecretKey(secret);
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
@@ -36,7 +41,7 @@ public class JwtUtil {
                 .claims(claims)
                 .issuedAt(now)
                 .expiration(expiryDate)
-                .signWith(key)
+                .signWith(key, Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -49,7 +54,7 @@ public class JwtUtil {
      * @throws io.jsonwebtoken.JwtException JWT解析异常
      */
     public static Claims parseToken(String token, String secret) {
-        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        SecretKey key = getSecretKey(secret);
         return Jwts.parser()
                 .verifyWith(key)
                 .build()
@@ -83,5 +88,29 @@ public class JwtUtil {
         } catch (Exception e) {
             return true;
         }
+    }
+
+    /**
+     * 获取密钥对象
+     * 如果密钥长度不足，自动进行填充
+     *
+     * @param secret 原始密钥字符串
+     * @return SecretKey对象
+     */
+    private static SecretKey getSecretKey(String secret) {
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        
+        // 如果密钥长度不足，进行填充
+        if (keyBytes.length < MIN_SECRET_KEY_LENGTH) {
+            byte[] paddedKey = new byte[MIN_SECRET_KEY_LENGTH];
+            System.arraycopy(keyBytes, 0, paddedKey, 0, keyBytes.length);
+            // 用固定字符填充剩余位置
+            for (int i = keyBytes.length; i < MIN_SECRET_KEY_LENGTH; i++) {
+                paddedKey[i] = (byte) (i % 256);
+            }
+            keyBytes = paddedKey;
+        }
+        
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }
