@@ -38,6 +38,16 @@ spring:
               uri: lb://mall-trade
               predicates:
                 - Path=/planting-plan/**
+            # Trade Service - Matching
+            - id: mall-trade-match
+              uri: lb://mall-trade
+              predicates:
+                - Path=/match/**
+            # Trade Service - Tracking
+            - id: mall-trade-tracking
+              uri: lb://mall-trade
+              predicates:
+                - Path=/tracking/**
             # Search Service
             - id: mall-search
               uri: lb://mall-search
