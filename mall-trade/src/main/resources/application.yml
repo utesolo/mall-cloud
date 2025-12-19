@@ -22,8 +22,34 @@ spring:
             read-timeout: 10000
             logger-level: full
 
+
 server:
   port: 8084
+
+# Zipkin tracing configuration
+management:
+  tracing:
+    sampling:
+      probability: 0.1  # Default 10%, overridden by SmartSampler
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+
+# Custom tracing configuration
+tracing:
+  enabled: true
+  default-probability: 0.1  # Non-important paths: 10%
+  important-probability: 1.0  # Important paths: 100%
+  important-paths:
+    - /order
+    - /payment
+    - /match
+    - /planting-plan/create
+    - /planting-plan/update
+  ignore-paths:
+    - /actuator
+    - /health
+    - /favicon
 
 logging:
   level:

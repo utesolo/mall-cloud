@@ -23,7 +23,7 @@
 - OpenApi
 
 ## Link tracing
-- Zipkin Reporter Brave 2.16.3
+- Zipkin Reporter Brave 2.17.0
 - Micrometer tracing 1.6.0-M1
 
 
