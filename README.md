@@ -1,291 +1,232 @@
-# 项目概述
+# 农业供销平台 - Mail Cloud
 
-<cite>
-**本文档引用的文件**
-- [catalogue.md](file://catalogue.md)
-- [pom.xml](file://pom.xml)
-- [mall-auth/pom.xml](file://mall-auth/pom.xml)
-- [mall-gateway/pom.xml](file://mall-gateway/pom.xml)
-- [mall-zipkin/pom.xml](file://mall-zipkin/pom.xml)
-- [mall-auth/src/main/resources/application.yml](file://mall-auth/src/main/resources/application.yml)
-- [mall-gateway/src/main/resources/application.yml](file://mall-gateway/src/main/resources/application.yml)
-- [mall-zipkin/src/main/resources/application.yml](file://mall-zipkin/src/main/resources/application.yml)
-- [mall-auth/src/main/java/xyh/dp/mall/auth/MallAuthApplication.java](file://mall-auth/src/main/java/xyh/dp/mall/auth/MallAuthApplication.java)
-- [mall-gateway/src/main/java/xyh/dp/mall/gateway/MallGatewayApplication.java](file://mall-gateway/src/main/java/xyh/dp/mall/gateway/MallGatewayApplication.java)
-</cite>
+一个基于Spring Cloud微服务架构的农业种子供销平台，为农户和供应商提供智能化匹配、搜索和交易功能。
 
-## 目录
-1. [简介](#简介)
-2. [项目结构](#项目结构)
-3. [核心功能](#核心功能)
-4. [架构设计原则](#架构设计原则)
-5. [微服务职责划分](#微服务职责划分)
-6. [技术栈选型分析](#技术栈选型分析)
-7. [服务协作与数据流](#服务协作与数据流)
-8. [配置与依赖管理](#配置与依赖管理)
-9. [总结](#总结)
+## 项目概述
 
-## 简介
+本项目是一个完整的农业种子供销电商平台，采用微服务架构设计，包含商品管理、智能匹配、搜索、交易、用户认证等核心功能。通过机器学习算法实现供需智能匹配，提升农业种子交易效率。
 
-mail-cloud项目是一个基于Spring Cloud的电商平台微服务系统，旨在提供一个高可用、可扩展的分布式电商解决方案。系统采用现代化的微服务架构，将传统单体应用拆分为多个独立部署、独立演进的服务模块，涵盖商品管理、交易处理、用户认证、文件存储、搜索服务等核心电商业务能力。
+## 技术架构
 
-该项目为开发者提供了清晰的技术架构和模块化设计，既适合初学者理解微服务架构的全貌，也为高级开发者提供了深入的技术决策背景。通过使用最新的Java 25、Spring Boot 4.0.0-M1和Spring Cloud 2025.0.0等前沿技术，系统展现了现代云原生应用的最佳实践。
+### 微服务架构
+- **网关服务** (mall-gateway): 统一入口，路由转发
+- **认证服务** (mall-auth): 用户认证和授权
+- **商品服务** (mall-product): 商品管理和库存
+- **交易服务** (mall-trade): 订单和购物车管理
+- **搜索服务** (mall-search): Elasticsearch全文搜索
+- **配置中心** (mall-config): 统一配置管理
+- **文件服务** (mall-file): 文件上传管理
+- **链路追踪** (mall-zipkin): 分布式链路追踪
+
+### 核心技术栈
+- **后端**: Java 21, Spring Boot 3.5, Spring Cloud 2024.0
+- **数据库**: MySQL 8.0, Redis 5.0
+- **搜索**: Elasticsearch 7.17
+- **服务注册**: Nacos 2.4
+- **远程调用**: OpenFeign
+- **ORM框架**: MyBatis-Plus
+- **链路追踪**: Zipkin + Brave
+- **机器学习**: Python + Scikit-learn
+
+## 功能模块
+
+### 1. 智能供需匹配
+- 基于种植计划的智能匹配算法
+- 多维度匹配评分（品种、区域、气候、季节、质量、供需意图）
+- 机器学习模型训练和推理
+- 异步匹配任务处理
+
+### 2. 商品搜索系统
+- Elasticsearch全文搜索
+- 智能搜索建议
+- 多维度筛选（分类、价格、区域、品种）
+- 热销商品推荐
+
+### 3. 交易系统
+- 完整购物车功能
+- 订单管理（创建、支付、发货、收货）
+- 用户购买记录统计
+- 一周热销排行榜
+
+### 4. 用户系统
+- 微信小程序登录
+- JWT Token认证
+- 用户权限管理
+
+### 5. 商品管理
+- 商品CRUD操作
+- 库存管理
+- 分类管理
+- 商品状态管理
 
 ## 项目结构
 
-mail-cloud项目采用典型的Maven多模块结构，每个微服务作为一个独立的Maven模块进行管理，便于独立开发、测试和部署。项目根目录下的pom.xml定义了全局依赖管理和版本控制，确保所有子模块使用统一的技术栈。
-
-```mermaid
-graph TB
-subgraph "核心业务服务"
-Auth[mall-auth<br>认证授权服务]
-Product[mall-product<br>商品服务]
-Trade[mall-trade<br>交易服务]
-File[mall-file<br>文件服务]
-Search[mall-search<br>搜索服务]
-Job[mall-job<br>定时任务服务]
-end
-subgraph "基础设施服务"
-Gateway[mall-gateway<br>API网关]
-Config[mall-config<br>配置中心]
-Zipkin[mall-zipkin<br>链路追踪]
-Common[mall-common<br>公共模块]
-end
-Gateway --> Auth
-Gateway --> Product
-Gateway --> Trade
-Gateway --> File
-Gateway --> Search
-Auth --> Config
-Product --> Config
-Trade --> Config
-File --> Config
-Search --> Config
-Job --> Config
-Zipkin --> Config
-Common -.-> AllServices[所有服务]
-style Auth fill:#f9f,stroke:#333
-style Product fill:#f9f,stroke:#333
-style Trade fill:#f9f,stroke:#333
-style File fill:#f9f,stroke:#333
-style Search fill:#f9f,stroke:#333
-style Job fill:#f9f,stroke:#333
-style Gateway fill:#bbf,stroke:#333
-style Config fill:#bbf,stroke:#333
-style Zipkin fill:#bbf,stroke:#333
-style Common fill:#ffcc00,stroke:#333
+```
+mail-cloud/
+├── mall-auth/          # 认证服务
+├── mall-common/        # 公共组件
+├── mall-config/        # 配置中心
+├── mall-file/          # 文件服务
+├── mall-gateway/       # API网关
+├── mall-product/       # 商品服务
+├── mall-search/        # 搜索服务
+├── mall-trade/         # 交易服务
+├── mall-zipkin/        # 链路追踪
+├── ml/                 # 机器学习模型
+├── ml-model/           # 模型服务
+└── sql/                # 数据库脚本
 ```
 
-**Diagram sources**
-- [pom.xml](file://pom.xml)
-- [catalogue.md](file://catalogue.md)
+## 核心特性
 
-**Section sources**
-- [pom.xml](file://pom.xml#L24-L34)
-- [catalogue.md](file://catalogue.md#L1-L13)
+### 1. 智能匹配算法
+- **品种匹配**: 基于编辑距离的品种相似度计算
+- **区域匹配**: 地理位置和种植环境匹配
+- **气候匹配**: 温湿度等环境因素匹配
+- **季节匹配**: 种植季节适配
+- **质量匹配**: 发芽率、纯度等质量指标
+- **供需意图匹配**: 基于描述关键词的供需匹配
 
-## 核心功能
+### 2. 高性能搜索
+- Elasticsearch全文检索
+- 搜索建议和自动补全
+- 实时数据同步（MySQL ↔ ES）
+- 多维度复合查询
 
-mail-cloud系统提供了完整的电商平台核心功能，通过微服务架构实现了功能解耦和独立演进：
+### 3. 分布式事务
+- 订单创建的分布式事务处理
+- 库存扣减的乐观锁机制
+- 购买记录的异步保存
 
-- **商品管理**：通过mall-product服务实现商品信息、分类体系、品牌管理等核心商品数据的维护
-- **交易处理**：通过mall-trade服务支持购物车管理、订单创建、支付回调等完整交易流程
-- **用户认证**：通过mall-auth服务提供微信登录集成、JWT令牌签发与验证等安全认证功能
-- **文件存储**：通过mall-file服务实现图片、视频等多媒体文件的上传与管理，支持OSS/MinIO等对象存储
-- **搜索服务**：通过mall-search服务基于Elasticsearch提供高性能的商品全文搜索能力
-- **定时任务**：通过mall-job服务处理过期订单清理、数据统计等后台定时任务
-- **配置管理**：通过mall-config服务实现分布式配置的集中管理与动态刷新
-- **链路追踪**：通过mall-zipkin服务提供全链路分布式追踪能力，便于问题排查与性能分析
+### 4. 数据分析
+- 用户购买行为统计
+- 商品热销排行分析
+- 个性化推荐支持
 
-这些功能模块通过清晰的边界划分和标准化的接口协议协同工作，共同构成了完整的电商平台生态系统。
+## API接口
 
-**Section sources**
-- [catalogue.md](file://catalogue.md#L4-L13)
+### 商品服务 (mall-product)
+- `/product/create` - 创建商品
+- `/product/update` - 更新商品
+- `/product/list` - 商品列表
+- `/product/detail/{id}` - 商品详情
+- `/product/stock/update` - 库存更新
 
-## 架构设计原则
+### 交易服务 (mall-trade)
+- `/cart/add` - 添加购物车
+- `/cart/list` - 购物车列表
+- `/order/create` - 创建订单
+- `/order/list` - 订单列表
+- `/match/async` - 异步匹配任务
 
-mail-cloud项目遵循现代微服务架构的核心设计原则，确保系统的可维护性、可扩展性和高可用性：
+### 搜索服务 (mall-search)
+- `/search` - 商品搜索
+- `/search/hot` - 热销商品
+- `/search/suggest` - 搜索建议
 
-### 微服务划分原则
-系统采用业务能力驱动的微服务划分方法，每个服务对应一个明确的业务领域，具有高内聚、低耦合的特点。服务边界基于业务上下文进行定义，避免了功能交叉和职责不清的问题。
+### 认证服务 (mall-auth)
+- `/auth/wechat/login` - 微信登录
+- `/auth/refresh` - Token刷新
 
-### 服务注册与发现
-系统采用Nacos作为服务注册与发现中心，所有微服务在启动时向Nacos注册自身实例信息，并定期发送心跳维持注册状态。其他服务通过服务名称从Nacos获取可用实例列表，实现客户端负载均衡。
+## 部署说明
 
-### API网关统一入口
-通过Spring Cloud Gateway实现API网关层，作为系统的统一入口点。所有外部请求首先到达网关，由网关根据预定义的路由规则转发到相应的后端服务，实现了请求路由、负载均衡、安全过滤等功能的集中管理。
+### 环境要求
+- Java 21
+- Maven 3.8+
+- MySQL 8.0
+- Redis 5.0
+- Elasticsearch 7.17
+- Nacos 2.4
 
-### 分布式链路追踪
-系统集成Zipkin实现分布式链路追踪，通过Sleuth生成唯一的追踪ID并在服务调用链中传递，使得跨服务的请求能够被完整追踪和可视化，极大提升了分布式系统的可观测性。
+### 启动顺序
+1. 启动 Nacos 注册中心
+2. 启动 MySQL 和 Redis
+3. 启动 Elasticsearch
+4. 启动 Zipkin 链路追踪
+5. 启动各微服务应用
 
-### 配置中心
-采用Nacos Config作为配置中心，将各服务的配置文件从代码中剥离，实现配置的集中管理和动态更新，避免了配置散落在各个服务中的管理难题。
+### 配置文件
+- `application.yml` - 主配置文件
+- `application-local.yml` - 本地开发配置
+- 配置中心统一管理服务配置
 
-**Section sources**
-- [catalogue.md](file://catalogue.md#L11-L13)
-- [pom.xml](file://pom.xml#L61-L69)
+## 机器学习模型
 
-## 微服务职责划分
+### 模型训练
+- 特征工程：品种、区域、气候、季节、质量、供需意图
+- 算法：随机森林、XGBoost
+- 模型评估：准确率、召回率、F1分数
 
-根据catalogue.md中的模块说明，mail-cloud项目中的各个微服务具有明确的职责边界：
+### 模型部署
+- Python Flask推理服务
+- REST API接口
+- 实时预测能力
 
-```mermaid
-flowchart TD
-A["mall-common<br>全局公共模块"] --> |提供工具类、常量、<br>通用返回对象| B["mall-gateway<br>API网关"]
-A --> |提供共享依赖| C["mall-auth<br>认证授权服务"]
-A --> |提供共享依赖| D["mall-product<br>商品服务"]
-A --> |提供共享依赖| E["mall-file<br>文件服务"]
-A --> |提供共享依赖| F["mall-trade<br>交易服务"]
-A --> |提供共享依赖| G["mall-search<br>搜索服务"]
-A --> |提供共享依赖| H["mall-job<br>定时任务服务"]
-B --> |路由/auth/**请求| C
-B --> |路由/product/**请求| D
-B --> |路由/file/**请求| E
-B --> |路由/trade/**请求| F
-B --> |路由/search/**请求| G
-I["mall-config<br>配置中心"] --> |提供配置管理| C
-I --> |提供配置管理| D
-I --> |提供配置管理| E
-I --> |提供配置管理| F
-I --> |提供配置管理| G
-I --> |提供配置管理| H
-I --> |提供配置管理| B
-J["mall-zipkin<br>链路追踪"] --> |收集追踪数据| C
-J --> |收集追踪数据| D
-J --> |收集追踪数据| E
-J --> |收集追踪数据| F
-J --> |收集追踪数据| G
-J --> |收集追踪数据| H
-J --> |收集追踪数据| B
-style A fill:#ffcc00,stroke:#333
-style B fill:#bbf,stroke:#333
-style C fill:#f9f,stroke:#333
-style D fill:#f9f,stroke:#333
-style E fill:#f9f,stroke:#333
-style F fill:#f9f,stroke:#333
-style G fill:#f9f,stroke:#333
-style H fill:#f9f,stroke:#333
-style I fill:#bbf,stroke:#333
-style J fill:#bbf,stroke:#333
-```
+## 性能优化
 
-**Diagram sources**
-- [catalogue.md](file://catalogue.md)
-- [mall-gateway/src/main/resources/application.yml](file://mall-gateway/src/main/resources/application.yml#L9-L29)
+### 缓存策略
+- Redis缓存热点数据
+- 本地缓存减少网络请求
+- 缓存预热和更新策略
 
-**Section sources**
-- [catalogue.md](file://catalogue.md#L2-L13)
+### 数据库优化
+- MyBatis-Plus分页查询
+- 索引优化
+- 读写分离
 
-## 技术栈选型分析
+### 搜索优化
+- Elasticsearch索引优化
+- 搜索结果缓存
+- 分词器定制
 
-mail-cloud项目的技术栈选择体现了对现代云原生应用最佳实践的深刻理解，各项技术选型均有明确的考量：
+## 监控与运维
 
-### Java 25
-项目采用最新的Java 25版本，充分利用了Java语言最新的性能优化、语法特性和安全增强。Java 25带来了更好的虚拟线程支持、更高效的垃圾回收器以及更丰富的API，为高并发电商平台提供了坚实的基础。
+### 链路追踪
+- Zipkin分布式追踪
+- 接口性能监控
+- 错误定位和分析
 
-### Spring Boot 4.0.0-M1
-选择Spring Boot 4.0.0-M1（里程碑版本）表明项目追求技术前沿，该版本在响应式编程、云原生支持、启动性能等方面有显著改进，为微服务架构提供了更强大的基础框架支持。
+### 日志管理
+- 结构化日志输出
+- 日志级别控制
+- 日志聚合分析
 
-### Spring Cloud 2025.0.0
-与Spring Boot 4.0匹配的Spring Cloud 2025.0.0版本提供了最新的微服务解决方案，包括改进的服务发现、配置管理、网关路由等功能，确保了微服务生态的完整性和先进性。
+## 扩展性设计
 
-### Spring Cloud Alibaba Nacos
-选择Nacos而非传统的Eureka和Config，是因为Nacos提供了更全面的服务发现和配置管理功能，支持AP/CP一致性模式切换、动态配置推送、服务健康检查等高级特性，更适合生产环境。
+### 微服务拆分
+- 业务边界清晰
+- 独立部署和扩展
+- 技术栈灵活选择
 
-### MyBatis-Plus 3.5.5
-在持久层选择MyBatis-Plus而非JPA，是因为MyBatis-Plus提供了更好的SQL控制能力，适合电商平台复杂的查询需求，同时其代码生成器和通用CRUD功能大大提升了开发效率。
+### 插件化设计
+- 策略模式实现业务逻辑
+- 配置驱动的功能扩展
+- 事件驱动的异步处理
 
-### Redis
-集成Redis作为缓存层，用于存储会话信息、商品缓存、分布式锁等，显著提升系统性能和响应速度，同时支持高并发场景下的数据一致性。
+## 开发规范
 
-### Elasticsearch
-选择Elasticsearch作为搜索引擎，是因为其强大的全文检索能力、高扩展性和实时搜索特性，完美满足电商平台的商品搜索需求。
+### 代码规范
+- 统一的代码风格
+- 详细的JavaDoc注释
+- 统一异常处理机制
 
-### JWT
-采用JWT（JSON Web Token）作为认证机制，实现了无状态的认证授权，便于在分布式环境中进行用户身份验证和权限控制。
+### 测试规范
+- 单元测试覆盖核心逻辑
+- 集成测试验证服务交互
+- 性能测试保障系统稳定
 
-**Section sources**
-- [pom.xml](file://pom.xml#L43-L53)
-- [pom.xml](file://pom.xml#L55-L173)
+## 未来规划
 
-## 服务协作与数据流
+- 实时推荐系统
+- 图像识别种子品质
+- 区块链溯源
+- IoT设备集成
+- AI种植指导
 
-mail-cloud系统中的服务协作遵循清晰的数据流动路径，确保了系统的稳定性和可预测性：
+## 贡献者
 
-```mermaid
-sequenceDiagram
-participant Client as "客户端"
-participant Gateway as "API网关<br>(mall-gateway)"
-participant Auth as "认证服务<br>(mall-auth)"
-participant Product as "商品服务<br>(mall-product)"
-participant Trade as "交易服务<br>(mall-trade)"
-participant File as "文件服务<br>(mall-file)"
-participant Search as "搜索服务<br>(mall-search)"
-participant Nacos as "Nacos<br>注册与配置中心"
-participant Zipkin as "Zipkin<br>链路追踪"
-Client->>Gateway : 发起HTTP请求
-Gateway->>Nacos : 查询服务实例
-Nacos-->>Gateway : 返回实例列表
-Gateway->>Auth : 路由/auth/**请求
-Gateway->>Product : 路由/product/**请求
-Gateway->>Trade : 路由/trade/**请求
-Gateway->>File : 路由/file/**请求
-Gateway->>Search : 路由/search/**请求
-Auth->>Zipkin : 上报追踪数据
-Product->>Zipkin : 上报追踪数据
-Trade->>Zipkin : 上报追踪数据
-File->>Zipkin : 上报追踪数据
-Search->>Zipkin : 上报追踪数据
-Gateway->>Zipkin : 上报追踪数据
-Auth->>Nacos : 注册服务实例
-Product->>Nacos : 注册服务实例
-Trade->>Nacos : 注册服务实例
-File->>Nacos : 注册服务实例
-Search->>Nacos : 注册服务实例
-Gateway->>Nacos : 注册服务实例
-Note over Client,Zipkin : 完整的请求处理与追踪流程
-```
+农业供销平台开发团队
 
-**Diagram sources**
-- [mall-gateway/src/main/resources/application.yml](file://mall-gateway/src/main/resources/application.yml)
-- [mall-auth/src/main/resources/application.yml](file://mall-auth/src/main/resources/application.yml)
-- [mall-zipkin/src/main/resources/application.yml](file://mall-zipkin/src/main/resources/application.yml)
+## 许可证
 
-**Section sources**
-- [mall-gateway/src/main/resources/application.yml](file://mall-gateway/src/main/resources/application.yml#L9-L29)
-- [mall-auth/src/main/resources/application.yml](file://mall-auth/src/main/resources/application.yml#L5-L10)
-
-## 配置与依赖管理
-
-mail-cloud项目通过精心设计的配置和依赖管理机制，确保了系统的可维护性和一致性：
-
-### 统一依赖管理
-项目根pom.xml通过<dependencyManagement>对所有子模块的依赖版本进行集中管理，确保了技术栈的一致性。这种"版本锁定"策略避免了不同模块使用不同版本依赖导致的兼容性问题。
-
-### 配置外置化
-各服务的application.yml配置文件中包含了Nacos配置中心的连接信息，实现了配置的外置化管理。服务启动时从Nacos拉取配置，支持配置的动态更新而无需重启服务。
-
-### 环境隔离
-通过Nacos的命名空间和分组功能，可以实现开发、测试、生产等不同环境的配置隔离，确保了环境间的配置独立性和安全性。
-
-### 公共模块复用
-mall-common模块作为全局公共模块，封装了工具类、常量定义、通用返回对象等跨服务共享的代码，避免了代码重复，提升了开发效率。
-
-### 健康检查与监控
-各服务配置了Actuator端点和日志级别，便于系统监控和故障排查。同时通过Zipkin的集成，实现了分布式系统的全面可观测性。
-
-**Section sources**
-- [pom.xml](file://pom.xml#L174-L191)
-- [mall-auth/src/main/resources/application.yml](file://mall-auth/src/main/resources/application.yml)
-- [mall-gateway/src/main/resources/application.yml](file://mall-gateway/src/main/resources/application.yml)
-- [mall-zipkin/src/main/resources/application.yml](file://mall-zipkin/src/main/resources/application.yml)
-
-## 总结
-
-mail-cloud项目作为一个基于Spring Cloud的电商平台微服务系统，展现了现代分布式架构的最佳实践。通过合理的微服务划分、先进的技术栈选择和清晰的架构设计，系统实现了高内聚、低耦合的模块化结构，具备良好的可扩展性和可维护性。
-
-项目采用Java 25、Spring Boot 4.0.0-M1等前沿技术，体现了对技术创新的追求；通过Nacos实现服务发现与配置管理，通过Spring Cloud Gateway统一API入口，通过Zipkin提供分布式追踪能力，构建了完整的微服务基础设施。
-
-对于初学者而言，该项目提供了清晰的系统全景图，有助于理解微服务架构的核心概念和实现方式；对于高级开发者而言，项目的技术选型和架构设计提供了有价值的参考，展示了如何在实际项目中应用最新的云原生技术。
-
-mail-cloud项目不仅是一个功能完整的电商平台原型，更是一个优秀的微服务架构学习案例，为开发者提供了从理论到实践的完整参考。
+MIT License
