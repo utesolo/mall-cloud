@@ -102,6 +102,25 @@ public class PlantingPlanController {
     }
 
     /**
+     * 拒绝种植计划
+     * 供销商拒绝已匹配的种植计划，自动从当前登录用户上下文获取供销商ID
+     * 
+     * @param planId 种植计划ID
+     * @return 操作结果
+     */
+    @PostMapping("/{planId}/reject")
+    @RequireLogin(allowedTypes = "SUPPLIER")
+    @Operation(summary = "拒绝种植计划", description = "供销商拒绝已匹配的种植计划，自动从登录信息获取供销商ID")
+    public Result<Void> rejectPlan(
+            @Parameter(description = "种植计划ID") @PathVariable String planId
+    ) {
+        String supplierId = UserContextHolder.getBusinessUserId();
+        log.info("拒绝种植计划请求: planId={}, supplierId={}", planId, supplierId);
+        plantingPlanService.rejectPlan(planId, supplierId);
+        return Result.success(null, "种植计划拒绝成功");
+    }
+
+    /**
      * 查询种植计划详情
      * 
      * @param planId 种植计划ID

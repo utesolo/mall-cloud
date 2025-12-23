@@ -98,7 +98,7 @@ public class PlantingPlan implements Serializable {
     private String climateMatch;
 
     /**
-     * 匹配状态: PENDING-待匹配, MATCHED-已匹配, CONFIRMED-已确认, CANCELLED-已取消
+     * 匹配状态: PENDING-待匹配, MATCHED-已匹配, CONFIRMED-已确认, REJECTED-已拒绝, CANCELLED-已取消
      */
     private String matchStatus;
 

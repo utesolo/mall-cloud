@@ -356,6 +356,36 @@ public class PlantingPlanService {
     }
 
     /**
+     * 拒绝种植计划（供销商拒绝匹配）
+     * 
+     * @param planId 种植计划ID
+     * @param supplierId 供销商ID
+     * @throws BusinessException 业务异常
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void rejectPlan(String planId, String supplierId) {
+        PlantingPlan plan = getByPlanId(planId);
+        
+        if (!plan.getSupplierId().equals(supplierId)) {
+            throw new BusinessException("无权操作此计划");
+        }
+        
+        // 只有已匹配的计划才能被拒绝
+        if (!"MATCHED".equals(plan.getMatchStatus())) {
+            throw new BusinessException("只能拒绝已匹配的计划");
+        }
+        
+        plan.setMatchStatus("REJECTED");
+        plan.setUpdateTime(LocalDateTime.now());
+        plan.setSupplierId(null);  // 清除供销商ID
+        plan.setMatchScore(null);  // 清除匹配分数
+        plan.setMatchTime(null);   // 清除匹配时间
+        plantingPlanMapper.updateById(plan);
+        
+        log.info("拒绝种植计划成功, planId: {}, supplierId: {}", planId, supplierId);
+    }
+
+    /**
      * 根据计划ID查询种植计划
      * 
      * @param planId 种植计划ID
