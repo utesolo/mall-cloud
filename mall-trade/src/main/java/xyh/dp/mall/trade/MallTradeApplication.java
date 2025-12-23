@@ -25,6 +25,7 @@ public class MallTradeApplication {
      * @param args 启动参数
      */
     public static void main(String[] args) {
+        System.setProperty("file.encoding", "UTF-8");
         SpringApplication.run(MallTradeApplication.class, args);
     }
 }
