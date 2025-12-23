@@ -12,6 +12,13 @@ spring:
       config:
         server-addr: ${nacos.server-addr:localhost:8848}
         file-extension: yml
+  data:
+    elasticsearch:
+      uris: https://localhost:9200
+      username: elastic
+      password: GyRI1IN9Yxb_6yAjsdx=
+      connection-timeout: 5s
+      socket-timeout: 60s
 
 server:
   port: 8082
@@ -24,6 +31,9 @@ management:
   zipkin:
     tracing:
       endpoint: http://localhost:9411/api/v2/spans
+  health:
+    elasticsearch:
+      enabled: false  # Disable ES health check to avoid SSL errors
 
 # Custom tracing configuration
 tracing:
