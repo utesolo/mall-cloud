@@ -11,6 +11,7 @@ import xyh.dp.mall.trade.feign.ProductFeignClient;
 import xyh.dp.mall.trade.feign.dto.ProductDTO;
 import xyh.dp.mall.trade.mapper.PlantingPlanMapper;
 import xyh.dp.mall.trade.matching.engine.MatchScoreCalculator;
+import xyh.dp.mall.trade.matching.engine.MLHybridMatchService;
 import xyh.dp.mall.trade.matching.feature.MatchFeature;
 
 import java.util.ArrayList;
@@ -43,6 +44,7 @@ public class AsyncMatchService {
     private final PlantingPlanMapper planMapper;
     private final ProductFeignClient productFeignClient;
     private final MatchScoreCalculator scoreCalculator;
+    private final MLHybridMatchService mlHybridMatchService;
 
     /**
      * 提交新的匹配任务
@@ -197,7 +199,7 @@ public class AsyncMatchService {
                 }
 
                 try {
-                    MatchFeature feature = scoreCalculator.calculateScore(plan, product);
+                    MatchFeature feature = mlHybridMatchService.calculateScore(plan, product);
                     features.add(feature);
                 } catch (Exception e) {
                     log.warn("Failed to calculate score for product {}: {}", product.getId(), e.getMessage());

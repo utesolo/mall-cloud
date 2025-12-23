@@ -21,7 +21,13 @@ spring:
             connect-timeout: 5000
             read-timeout: 10000
             logger-level: full
-
+  data:
+    elasticsearch:
+      uris: https://localhost:9200
+      username: elastic
+      password: GyRI1IN9Yxb_6yAjsdx=
+      connection-timeout: 5s
+      socket-timeout: 60s
 
 server:
   port: 8084
@@ -34,6 +40,9 @@ management:
   zipkin:
     tracing:
       endpoint: http://localhost:9411/api/v2/spans
+  health:
+    elasticsearch:
+      enabled: false  # Disable ES health check to avoid SSL errors
 
 # Custom tracing configuration
 tracing:
@@ -50,6 +59,19 @@ tracing:
     - /actuator
     - /health
     - /favicon
+
+# ML模型配置
+ml:
+  model:
+    # ML模型API地址
+    api-url: http://localhost:5000
+    # 是否启用ML模型
+    enabled: true
+    # ML模型流量比例 (0-100)
+    # 0: 100%规则引擎，0%ML模型
+    # 50: 50%规则引擎，50%ML模型
+    # 100: 0%规则引擎，100%ML模型
+    traffic-ratio: 0
 
 logging:
   level:
