@@ -14,6 +14,7 @@ import xyh.dp.mall.common.exception.BusinessException;
 import xyh.dp.mall.common.result.Result;
 import xyh.dp.mall.trade.dto.CreateOrderDTO;
 import xyh.dp.mall.trade.entity.Order;
+import xyh.dp.mall.trade.entity.PurchaseRecord;
 import xyh.dp.mall.trade.feign.ProductFeignClient;
 import xyh.dp.mall.trade.feign.dto.ProductDTO;
 import xyh.dp.mall.trade.mapper.OrderMapper;
@@ -43,6 +44,7 @@ public class OrderService {
 
     private final OrderMapper orderMapper;
     private final ProductFeignClient productFeignClient;
+    private final PurchaseRecordService purchaseRecordService;
     
     @Qualifier("orderExecutor")
     private final Executor orderExecutor;
@@ -79,7 +81,7 @@ public class OrderService {
                 orderNo, createOrderDTO.getUserId(), productId);
         
         // 5. 事务提交后异步增加销量（保证一致性）
-        registerAfterCommitTask(productId, quantity);
+        registerAfterCommitTask(order, product, productId, quantity);
         
         return convertToVO(order);
     }
@@ -170,26 +172,62 @@ public class OrderService {
 
     /**
      * 注册事务提交后的异步任务
-     * 确保订单提交成功后才增加销量
+     * 确保订单提交成功后才增加销量和保存购买记录
      * 
+     * @param order 订单
+     * @param product 商品信息
      * @param productId 商品ID
      * @param quantity 数量
      */
-    private void registerAfterCommitTask(Long productId, Integer quantity) {
+    private void registerAfterCommitTask(Order order, ProductDTO product, Long productId, Integer quantity) {
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
                         CompletableFuture.runAsync(() -> {
                             try {
+                                // 增加商品销量
                                 productFeignClient.increaseSales(productId, quantity);
                                 log.debug("增加商品销量成功, productId: {}", productId);
+                                
+                                // 保存购买记录
+                                OrderService.this.savePurchaseRecord(order, product);
+                                log.debug("保存购买记录成功, orderId: {}", order.getId());
                             } catch (Exception e) {
-                                log.error("增加商品销量失败, productId: {}", productId, e);
+                                log.error("订单后续处理失败, orderId: {}", order.getId(), e);
                             }
                         }, orderExecutor);
                     }
                 });
+    }
+    
+    /**
+     * 保存购买记录
+     * 
+     * @param order 订单
+     * @param product 商品信息
+     */
+    private void savePurchaseRecord(Order order, ProductDTO product) {
+        try {
+            PurchaseRecord record = new PurchaseRecord();
+            record.setUserId(order.getUserId());
+            record.setOrderId(order.getId());
+            record.setOrderNo(order.getOrderNo());
+            record.setProductId(product.getId());
+            record.setProductName(product.getName());
+            // categoryId和categoryName留空，需要时再通过Feign查询
+            record.setVariety(product.getVariety());
+            record.setOrigin(product.getOrigin());
+            record.setPrice(order.getPrice());
+            record.setQuantity(order.getQuantity());
+            record.setTotalAmount(order.getTotalAmount());
+            record.setSupplierId(product.getSupplierId());
+            record.setPurchaseTime(order.getPayTime() != null ? order.getPayTime() : LocalDateTime.now());
+            
+            purchaseRecordService.savePurchaseRecord(record);
+        } catch (Exception e) {
+            log.error("保存购买记录失败, orderId: {}", order.getId(), e);
+        }
     }
 
     /**
