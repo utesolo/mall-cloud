@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import xyh.dp.mall.auth.dto.WeChatLoginDTO;
 import xyh.dp.mall.auth.service.AuthService;
 import xyh.dp.mall.auth.vo.LoginVO;
+import xyh.dp.mall.common.annotation.RateLimit;
 import xyh.dp.mall.common.result.Result;
 
 /**
@@ -33,6 +34,7 @@ public class AuthController {
      * @return 登录结果
      */
     @PostMapping("/wechat/login")
+    @RateLimit(prefix = "login", window = 60, maxRequests = 50, message = "登录请求过于频繁，请稍后再试")
     @Operation(summary = "微信小程序登录", description = "通过微信code进行登录,新用户自动注册")
     public Result<LoginVO> weChatLogin(@RequestBody WeChatLoginDTO loginDTO) {
         log.info("微信登录请求: code={}, userType={}", loginDTO.getCode(), loginDTO.getUserType());

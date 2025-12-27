@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import xyh.dp.mall.common.annotation.RateLimit;
 import xyh.dp.mall.common.annotation.RequireLogin;
 import xyh.dp.mall.common.result.Result;
 import xyh.dp.mall.trade.dto.AddCartItemDTO;
@@ -37,6 +38,7 @@ public class CartController {
      */
     @PostMapping("/add")
     @RequireLogin
+    @RateLimit(prefix = "cart_add", window = 60, maxRequests = 50, message = "操作过于频繁，请稍后再试")
     @Operation(summary = "添加商品到购物车", description = "如果商品已存在则增加数量")
     public Result<Long> addToCart(@Valid @RequestBody AddCartItemDTO dto) {
         log.info("添加购物车请求: productId={}, quantity={}", dto.getProductId(), dto.getQuantity());
@@ -66,6 +68,7 @@ public class CartController {
      */
     @PutMapping("/quantity")
     @RequireLogin
+    @RateLimit(prefix = "cart_update", window = 60, maxRequests = 50, message = "操作过于频繁，请稍后再试")
     @Operation(summary = "更新购物车数量", description = "修改购物车项的数量")
     public Result<Void> updateQuantity(@Valid @RequestBody UpdateCartItemDTO dto) {
         log.info("更新购物车数量: id={}, quantity={}", dto.getId(), dto.getQuantity());

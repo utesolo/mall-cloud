@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import xyh.dp.mall.common.annotation.RateLimit;
 import xyh.dp.mall.common.annotation.RequireLogin;
 import xyh.dp.mall.common.context.UserContextHolder;
 import xyh.dp.mall.common.result.Result;
@@ -39,6 +40,7 @@ public class PlantingPlanController {
      */
     @PostMapping("/create")
     @RequireLogin(allowedTypes = "FARMER")
+    @RateLimit(prefix = "planting_plan_create", window = 60, maxRequests = 50, message = "创建过于频繁，请稍后再试")
     @Operation(summary = "创建种植计划", description = "农户提交种植计划信息，自动从登录信息获取农户ID")
     public Result<PlantingPlanVO> createPlan(@Valid @RequestBody CreatePlantingPlanDTO createDTO) {
         // 从用户上下文自动获取农户ID
@@ -56,6 +58,7 @@ public class PlantingPlanController {
      * @return 匹配后的种植计划信息
      */
     @PostMapping("/{planId}/match")
+    @RateLimit(prefix = "planting_plan_match", window = 60, maxRequests = 50, message = "匹配请求过于频繁，请稍后再试")
     @Operation(summary = "执行供给匹配", description = "对种植计划执行AI供给匹配")
     public Result<PlantingPlanVO> executeMatch(@Parameter(description = "种植计划ID") @PathVariable String planId) {
         log.info("执行供给匹配请求: planId={}", planId);

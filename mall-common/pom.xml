@@ -18,6 +18,18 @@
     </properties>
 
     <dependencies>
+        <!-- Spring Data Redis for Rate Limiting -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        
+        <!-- AspectJ for Rate Limit Aspect -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+        
         <!-- Micrometer Tracing for Zipkin -->
         <dependency>
             <groupId>io.micrometer</groupId>
