@@ -3,18 +3,20 @@ package xyh.dp.mall.job;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * 定时任务服务启动类
- * 处理过期订单、数据统计等定时任务
+ * 处理ES数据同步、热销榜单更新、订单超时等定时任务
  * 
  * @author mall-cloud
  * @since 1.0.0
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"xyh.dp.mall.job", "xyh.dp.mall.common"})
 @EnableDiscoveryClient
 @EnableScheduling
+@EnableFeignClients
 public class MallJobApplication {
 
     /**
