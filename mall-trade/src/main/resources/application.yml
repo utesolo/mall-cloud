@@ -60,17 +60,11 @@ tracing:
     - /health
     - /favicon
 
-# ML模型配置
+# ML Model Config
 ml:
   model:
-    # ML模型API地址
-    api-url: http://localhost:5000
-    # 是否启用ML模型
-    enabled: true
-    # ML模型流量比例 (0-100)
-    # 0: 100%规则引擎，0%ML模型
-    # 50: 50%规则引擎，50%ML模型
-    # 100: 0%规则引擎，100%ML模型
+    api-url: http://localhost:5000 # ML API
+    enabled: true # enabled ML
     traffic-ratio: 0
 
 logging:
