@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MatchScoreCalculator {
 
+    private static final BigDecimal HARD_MISMATCH_THRESHOLD = new BigDecimal("40");
+
     private final MatchFeatureExtractor featureExtractor;
     private final FeatureWeight featureWeight;
 
@@ -40,6 +42,18 @@ public class MatchScoreCalculator {
     public MatchFeature calculateScore(PlantingPlan plan, ProductDTO product) {
         // 提取特征
         MatchFeature feature = featureExtractor.extractFeatures(plan, product);
+
+        // 硬性约束过滤：品种、区域或季节任一严重不匹配则直接判为0分
+        if (isHardMismatch(feature)) {
+            feature.setTotalScore(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+            feature.setMatchGrade("D");
+            feature.setRecommendation("品种/区域/季节存在硬性不匹配，不推荐该商品。");
+
+            log.info("硬性不匹配: planId={}, productId={}, varietyScore={}, regionScore={}, seasonScore={}",
+                    plan.getPlanId(), product.getId(),
+                    feature.getVarietyScore(), feature.getRegionScore(), feature.getSeasonScore());
+            return feature;
+        }
         
         // 获取归一化权重
         FeatureWeight weight = featureWeight.normalize();
@@ -62,6 +76,30 @@ public class MatchScoreCalculator {
                 plan.getPlanId(), product.getId(), feature.getTotalScore(), feature.getMatchGrade());
         
         return feature;
+    }
+
+    /**
+     * 判断是否存在硬性不匹配
+     * 品种、区域或季节任一维度得分低于阈值(40)则视为不匹配
+     *
+     * @param feature 匹配特征
+     * @return 存在硬性不匹配返回true
+     */
+    public boolean isHardMismatch(MatchFeature feature) {
+        if (feature == null) {
+            return true;
+        }
+        BigDecimal variety = feature.getVarietyScore();
+        BigDecimal region = feature.getRegionScore();
+        BigDecimal season = feature.getSeasonScore();
+
+        if (variety == null || region == null || season == null) {
+            return false;
+        }
+
+        return variety.compareTo(HARD_MISMATCH_THRESHOLD) < 0
+                || region.compareTo(HARD_MISMATCH_THRESHOLD) < 0
+                || season.compareTo(HARD_MISMATCH_THRESHOLD) < 0;
     }
 
     /**

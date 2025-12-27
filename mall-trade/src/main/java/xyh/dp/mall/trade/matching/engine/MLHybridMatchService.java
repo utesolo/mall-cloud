@@ -106,8 +106,15 @@ public class MLHybridMatchService {
         }
         
         try {
-            // 1. 先用规则引擎提取特征
+            // 1. 先用规则引擎计算一次，获取完整特征（包含硬性约束判断）
             MatchFeature feature = ruleEngineCalculator.calculateScore(plan, product);
+
+            // 如果存在硬性不匹配，直接返回规则引擎结果，不再调用ML
+            if (ruleEngineCalculator.isHardMismatch(feature)) {
+                log.debug("存在硬性不匹配，跳过ML模型: planId={}, productId={}",
+                        plan.getPlanId(), product.getId());
+                return feature;
+            }
             
             // 2. 构建请求体
             Map<String, Object> requestBody = new HashMap<>();
