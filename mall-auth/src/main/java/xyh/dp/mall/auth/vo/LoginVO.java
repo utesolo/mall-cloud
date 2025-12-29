@@ -24,9 +24,29 @@ public class LoginVO implements Serializable {
     private Long userId;
 
     /**
-     * JWT Token
+     * Access Token（访问令牌，短期有效）
      */
-    @Schema(description = "访问令牌")
+    @Schema(description = "访问令牌（15分钟有效）")
+    private String accessToken;
+    
+    /**
+     * Refresh Token（刷新令牌，长期有效）
+     */
+    @Schema(description = "刷新令牌（7天有效）")
+    private String refreshToken;
+    
+    /**
+     * Access Token过期时间（秒）
+     */
+    @Schema(description = "访问令牌过期时间（秒）")
+    private Long expiresIn;
+
+    /**
+     * JWT Token（兼容旧接口）
+     * @deprecated 请使用accessToken
+     */
+    @Deprecated
+    @Schema(description = "访问令牌（已废弃，请使用accessToken）")
     private String token;
 
     /**

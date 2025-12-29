@@ -28,4 +28,5 @@ wechat:
 # JWT配置
 jwt:
   secret: your-jwt-secret-key-at-least-256-bits-long
-  expiration: 604800000  # 7天(毫秒)
+  access-token-expiration: 900000  # Access Token过期时间：15分钟（毫秒）
+  refresh-token-expiration: 604800000  # Refresh Token过期时间：7天（毫秒）

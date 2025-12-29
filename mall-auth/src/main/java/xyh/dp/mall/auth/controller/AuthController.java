@@ -2,14 +2,18 @@ package xyh.dp.mall.auth.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import xyh.dp.mall.auth.dto.RefreshTokenDTO;
 import xyh.dp.mall.auth.dto.WeChatLoginDTO;
 import xyh.dp.mall.auth.service.AuthService;
 import xyh.dp.mall.auth.vo.LoginVO;
 import xyh.dp.mall.common.annotation.RateLimit;
 import xyh.dp.mall.common.result.Result;
+
+import java.util.Map;
 
 /**
  * 认证控制器
@@ -40,6 +44,21 @@ public class AuthController {
         log.info("微信登录请求: code={}, userType={}", loginDTO.getCode(), loginDTO.getUserType());
         LoginVO loginVO = authService.weChatLogin(loginDTO);
         return Result.success(loginVO, "登录成功");
+    }
+
+    /**
+     * 刷新Access Token
+     * 
+     * @param dto 刷新Token请求
+     * @return Token信息
+     */
+    @PostMapping("/refresh")
+    @RateLimit(prefix = "token_refresh", window = 60, maxRequests = 50, message = "刷新请求过于频繁，请稍后再试")
+    @Operation(summary = "刷新Access Token", description = "使用Refresh Token换取新的Access Token")
+    public Result<Map<String, Object>> refreshToken(@Valid @RequestBody RefreshTokenDTO dto) {
+        log.info("刷新Token请求");
+        Map<String, Object> tokenInfo = authService.refreshToken(dto.getRefreshToken());
+        return Result.success(tokenInfo, "刷新成功");
     }
 
     /**
