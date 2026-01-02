@@ -1,0 +1,16 @@
+# mall-job 定时任务服务配置 - 放入Nacos配置中心
+# Data ID: mall-job.yml
+# Group: DEFAULT_GROUP
+# 描述: 定时任务服务的特定配置
+
+# OpenFeign配置
+spring:
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+      client:
+        config:
+          default:
+            connect-timeout: 10000
+            read-timeout: 30000  # 定时任务读取超时时间可以长一些

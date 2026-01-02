@@ -1,0 +1,23 @@
+# mall-gateway 网关配置 - 放入Nacos配置中心
+# Data ID: mall-gateway.yml
+# Group: DEFAULT_GROUP
+# 描述: 网关服务的特定配置
+
+# IP限流配置
+gateway:
+  ratelimit:
+    enabled: true
+    window: 60  # 时间窗口：60秒（1分钟）
+    max-requests: 100  # 每个IP每分钟最多100次请求
+    message: "请求过于频繁，请稍后再试"
+    whitelist:  # IP白名单
+      - 127.0.0.1
+      - 0:0:0:0:0:0:0:1
+
+# 自定义链路追踪配置 - 覆盖通用配置
+tracing:
+  important-paths:
+    - /order
+    - /payment
+    - /match
+    - /auth/login

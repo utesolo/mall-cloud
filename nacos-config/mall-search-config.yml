@@ -1,0 +1,23 @@
+# mall-search 搜索服务配置 - 放入Nacos配置中心
+# Data ID: mall-search.yml
+# Group: DEFAULT_GROUP
+# 描述: 搜索服务的特定配置
+
+# OpenFeign配置
+spring:
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+      client:
+        config:
+          default:
+            connect-timeout: 5000
+            read-timeout: 10000
+
+# 自定义链路追踪配置
+tracing:
+  important-paths:
+    - /search/products
+    - /sync/all
+    - /sync/incremental

@@ -1,0 +1,24 @@
+# mall-auth 认证服务配置 - 放入Nacos配置中心
+# Data ID: mall-auth.yml (追加内容，与数据库配置合并)
+# Group: DEFAULT_GROUP
+# 描述: 认证服务的特定配置
+
+# 微信小程序配置
+wechat:
+  mini-app:
+    app-id: your-wechat-mini-app-id
+    app-secret: your-wechat-mini-app-secret
+
+# JWT配置
+jwt:
+  secret: your-jwt-secret-key-at-least-256-bits-long-please-change-this-in-production
+  access-token-expiration: 900000  # Access Token过期时间：15分钟（毫秒）
+  refresh-token-expiration: 604800000  # Refresh Token过期时间：7天（毫秒）
+
+# 自定义链路追踪配置
+tracing:
+  important-paths:
+    - /auth/login
+    - /auth/register
+    - /auth/logout
+    - /auth/refresh

@@ -1,0 +1,19 @@
+# Redis 通用配置 - 放入Nacos配置中心
+# Data ID: redis-common.yml
+# Group: DEFAULT_GROUP
+# 描述: 所有微服务共享的Redis基础配置
+
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+        shutdown-timeout: 100ms

@@ -2,7 +2,10 @@ spring:
   application:
     name: mall-job
   config:
-    import: optional:nacos:${spring.application.name}.yml
+    import:
+      - optional:nacos:${spring.application.name}.yml
+      - optional:nacos:redis-common.yml
+      - optional:nacos:zipkin-common.yml
   profiles:
     active: local
   cloud:
@@ -12,20 +15,9 @@ spring:
       config:
         server-addr: ${nacos.server-addr:localhost:8848}
         file-extension: yml
-    openfeign:
-      circuitbreaker:
-        enabled: true
-      client:
-        config:
-          default:
-            connect-timeout: 10000
-            read-timeout: 30000
-            logger-level: full
   data:
     redis:
-      host: localhost
-      port: 6379
-      database: 3
+      database: 3  # 定时任务服务使用独立的Redis数据库
       
 server:
   port: 8086

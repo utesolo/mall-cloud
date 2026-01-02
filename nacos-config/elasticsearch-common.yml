@@ -1,0 +1,18 @@
+# Elasticsearch 通用配置 - 放入Nacos配置中心
+# Data ID: elasticsearch-common.yml
+# Group: DEFAULT_GROUP
+# 描述: Elasticsearch连接配置
+
+spring:
+  data:
+    elasticsearch:
+      uris: https://localhost:9200
+      username: elastic
+      password: your-elasticsearch-password
+      connection-timeout: 5s
+      socket-timeout: 60s
+
+management:
+  health:
+    elasticsearch:
+      enabled: false  # 禁用ES健康检查以避免SSL错误

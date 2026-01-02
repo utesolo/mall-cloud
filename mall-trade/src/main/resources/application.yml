@@ -4,7 +4,12 @@ spring:
   profiles:
     active: local
   config:
-    import: optional:nacos:${spring.application.name}.${spring.cloud.nacos.config.file-extension:yml}
+    import:
+      - optional:nacos:${spring.application.name}.${spring.cloud.nacos.config.file-extension:yml}
+      - optional:nacos:mysql-common.${spring.cloud.nacos.config.file-extension:yml}
+      - optional:nacos:redis-common.${spring.cloud.nacos.config.file-extension:yml}
+      - optional:nacos:elasticsearch-common.${spring.cloud.nacos.config.file-extension:yml}
+      - optional:nacos:zipkin-common.${spring.cloud.nacos.config.file-extension:yml}
   cloud:
     nacos:
       discovery:
@@ -12,60 +17,9 @@ spring:
       config:
         server-addr: ${nacos.server-addr:localhost:8848}
         file-extension: yml
-    openfeign:
-      circuitbreaker:
-        enabled: true
-      client:
-        config:
-          default:
-            connect-timeout: 5000
-            read-timeout: 10000
-            logger-level: full
-  data:
-    elasticsearch:
-      uris: https://localhost:9200
-      username: elastic
-      password: GyRI1IN9Yxb_6yAjsdx=
-      connection-timeout: 5s
-      socket-timeout: 60s
 
 server:
   port: 8084
-
-# Zipkin tracing configuration
-management:
-  tracing:
-    sampling:
-      probability: 0.1  # Default 10%, overridden by SmartSampler
-  zipkin:
-    tracing:
-      endpoint: http://localhost:9411/api/v2/spans
-  health:
-    elasticsearch:
-      enabled: false  # Disable ES health check to avoid SSL errors
-
-# Custom tracing configuration
-tracing:
-  enabled: true
-  default-probability: 0.1  # Non-important paths: 10%
-  important-probability: 1.0  # Important paths: 100%
-  important-paths:
-    - /order
-    - /payment
-    - /match
-    - /planting-plan/create
-    - /planting-plan/update
-  ignore-paths:
-    - /actuator
-    - /health
-    - /favicon
-
-# ML Model Config
-ml:
-  model:
-    api-url: http://localhost:5000 # ML API
-    enabled: true # enabled ML
-    traffic-ratio: 0
 
 logging:
   level:

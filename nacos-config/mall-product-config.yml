@@ -1,0 +1,11 @@
+# mall-product 商品服务配置 - 放入Nacos配置中心
+# Data ID: mall-product.yml (追加内容，与数据库配置合并)
+# Group: DEFAULT_GROUP
+# 描述: 商品服务的特定配置
+
+# 自定义链路追踪配置
+tracing:
+  important-paths:
+    - /product/stock
+    - /product/manage
+    - /product/create

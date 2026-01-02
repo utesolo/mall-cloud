@@ -2,7 +2,10 @@ spring:
   application:
     name: mall-gateway
   config:
-    import: optional:nacos:${spring.application.name}.yml
+    import:
+      - optional:nacos:${spring.application.name}.yml
+      - optional:nacos:redis-common.yml
+      - optional:nacos:zipkin-common.yml
   profiles:
     active: local
   cloud:
@@ -53,33 +56,8 @@ spring:
               uri: lb://mall-search
               predicates:
                 - Path=/search/**
-
 server:
   port: 8080
-
-# Zipkin tracing configuration
-management:
-  tracing:
-    sampling:
-      probability: 0.1
-  zipkin:
-    tracing:
-      endpoint: http://localhost:9411/api/v2/spans
-
-# Custom tracing configuration
-tracing:
-  enabled: true
-  default-probability: 0.1
-  important-probability: 1.0
-  important-paths:
-    - /order
-    - /payment
-    - /match
-    - /auth/login
-  ignore-paths:
-    - /actuator
-    - /health
-    - /favicon
 
 logging:
   level:

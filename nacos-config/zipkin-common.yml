@@ -1,0 +1,22 @@
+# Zipkin 链路追踪配置 - 放入Nacos配置中心
+# Data ID: zipkin-common.yml
+# Group: DEFAULT_GROUP
+# 描述: 所有微服务共享的Zipkin链路追踪配置
+
+management:
+  tracing:
+    sampling:
+      probability: 0.1  # 默认采样率10%
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+
+# 自定义链路追踪配置
+tracing:
+  enabled: true
+  default-probability: 0.1  # 普通路径采样率10%
+  important-probability: 1.0  # 重要路径采样率100%
+  ignore-paths:  # 忽略路径
+    - /actuator
+    - /health
+    - /favicon

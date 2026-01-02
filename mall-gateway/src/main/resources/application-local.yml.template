@@ -1,10 +1,10 @@
-# 配置文件模板 - 复制此文件为application-local.yml并填写真实配置
+# 本地开发配置模板
+# 使用时请复制为 application-local.yml 并填入实际值
+
 # 注意：以下配置已迁移到Nacos配置中心，无需在此配置：
-#   - 数据库配置 (mysql-common.yml + mall-auth.yml)
 #   - Redis配置 (redis-common.yml)
 #   - Zipkin配置 (zipkin-common.yml)
-#   - 微信配置 (mall-auth.yml)
-#   - JWT配置 (mall-auth.yml)
+#   - 限流配置 (mall-gateway.yml)
 
 # 如需本地调试，可在此覆盖Nacos配置
 # 例如：
@@ -12,3 +12,7 @@
 #   data:
 #     redis:
 #       password: local-redis-password
+#
+# gateway:
+#   ratelimit:
+#     enabled: false  # 本地开发时禁用限流
