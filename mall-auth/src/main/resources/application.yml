@@ -4,7 +4,11 @@ spring:
   profiles:
     active: local
   config:
-    import: optional:nacos:${spring.application.name}.${spring.cloud.nacos.config.file-extension:yml}
+    import:
+      - optional:nacos:${spring.application.name}.${spring.cloud.nacos.config.file-extension:yml}
+      - optional:nacos:mysql-common.${spring.cloud.nacos.config.file-extension:yml}
+      - optional:nacos:redis-common.${spring.cloud.nacos.config.file-extension:yml}
+      - optional:nacos:zipkin-common.${spring.cloud.nacos.config.file-extension:yml}
   cloud:
     nacos:
       discovery:
@@ -15,28 +19,6 @@ spring:
 
 server:
   port: 8081
-
-# Zipkin tracing configuration
-management:
-  tracing:
-    sampling:
-      probability: 0.1
-  zipkin:
-    tracing:
-      endpoint: http://localhost:9411/api/v2/spans
-
-# Custom tracing configuration - auth is important
-tracing:
-  enabled: true
-  default-probability: 0.1
-  important-probability: 1.0
-  important-paths:
-    - /auth/login
-    - /auth/register
-    - /auth/logout
-  ignore-paths:
-    - /actuator
-    - /health
 
 logging:
   level:
