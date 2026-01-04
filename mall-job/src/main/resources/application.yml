@@ -17,7 +17,8 @@ spring:
         file-extension: yml
   data:
     redis:
-      database: 3  # 定时任务服务使用独立的Redis数据库
+      # Jos Redis use database 3
+      database: 3
       
 server:
   port: 8086

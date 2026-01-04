@@ -18,7 +18,8 @@ spring:
         file-extension: yml
   data:
     redis:
-      database: 4  # 搜索服务使用独立的Redis数据库
+      # Search Redis use database 4
+      database: 4
 
 server:
   port: 8085
