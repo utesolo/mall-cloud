@@ -9,11 +9,11 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>xyh.dp</groupId>
-    <artifactId>mail-cloud</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <artifactId>mall-cloud</artifactId>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
-    <name>mail-cloud</name>
-    <description>mail-cloud</description>
+    <name>mall-cloud</name>
+    <description>mall-cloud</description>
     <url/>
     <licenses>
         <license/>
@@ -31,6 +31,7 @@
         <module>mall-search</module>
         <module>mall-job</module>
         <module>mall-zipkin</module>
+        <module>mall-ai</module>
     </modules>
     <scm>
         <connection/>

@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>xyh.dp</groupId>
-        <artifactId>mail-cloud</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <artifactId>mall-cloud</artifactId>
+        <version>1.0.0</version>
     </parent>
 
     <artifactId>mall-ai</artifactId>
@@ -14,8 +14,8 @@
     <description>AI智能服务 - Agent + RAG + PDF向量存储</description>
 
     <properties>
-        <maven.compiler.source>25</maven.compiler.source>
-        <maven.compiler.target>25</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring-ai.version>1.0.0-M5</spring-ai.version>
         <qdrant.version>1.9.1</qdrant.version>
@@ -26,7 +26,7 @@
         <dependency>
             <groupId>xyh.dp</groupId>
             <artifactId>mall-common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
         </dependency>
 
         <!-- Spring AI Core -->
@@ -38,9 +38,9 @@
 
         <!-- Spring AI DashScope (阿里云通义千问) -->
         <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-dashscope</artifactId>
-            <version>${spring-ai.version}</version>
+            <groupId>com.alibaba</groupId>
+            <artifactId>dashscope-sdk-java</artifactId>
+            <version>2.9.2</version>
         </dependency>
 
         <!-- Spring AI Qdrant Vector Store -->
