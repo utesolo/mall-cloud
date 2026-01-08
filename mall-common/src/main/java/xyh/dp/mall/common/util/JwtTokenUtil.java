@@ -175,14 +175,11 @@ public class JwtTokenUtil {
      * @param token JWT Token
      * @param secret 密钥
      * @return true-已过期, false-未过期
+     * @throws io.jsonwebtoken.JwtException JWT解析异常，调用方需处理
      */
     public static boolean isTokenExpired(String token, String secret) {
-        try {
-            Claims claims = parseToken(token, secret);
-            return claims.getExpiration().before(new Date());
-        } catch (Exception e) {
-            return true;
-        }
+        Claims claims = parseToken(token, secret);
+        return claims.getExpiration().before(new Date());
     }
     
     /**
@@ -191,14 +188,11 @@ public class JwtTokenUtil {
      * @param token JWT Token
      * @param secret 密钥
      * @return true-是Access Token, false-否
+     * @throws io.jsonwebtoken.JwtException JWT解析异常，调用方需处理
      */
     public static boolean isAccessToken(String token, String secret) {
-        try {
-            String tokenType = getTokenType(token, secret);
-            return TOKEN_TYPE_ACCESS.equals(tokenType);
-        } catch (Exception e) {
-            return false;
-        }
+        String tokenType = getTokenType(token, secret);
+        return TOKEN_TYPE_ACCESS.equals(tokenType);
     }
     
     /**
@@ -207,14 +201,11 @@ public class JwtTokenUtil {
      * @param token JWT Token
      * @param secret 密钥
      * @return true-是Refresh Token, false-否
+     * @throws io.jsonwebtoken.JwtException JWT解析异常，调用方需处理
      */
     public static boolean isRefreshToken(String token, String secret) {
-        try {
-            String tokenType = getTokenType(token, secret);
-            return TOKEN_TYPE_REFRESH.equals(tokenType);
-        } catch (Exception e) {
-            return false;
-        }
+        String tokenType = getTokenType(token, secret);
+        return TOKEN_TYPE_REFRESH.equals(tokenType);
     }
 
     /**

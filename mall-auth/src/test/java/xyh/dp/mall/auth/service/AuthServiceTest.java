@@ -129,7 +129,8 @@ class AuthServiceTest {
             // Given
             LoginVO loginVO = new LoginVO();
             loginVO.setUserId(1L);
-            loginVO.setToken("test_token");
+            loginVO.setAccessToken("test_access_token");
+            loginVO.setRefreshToken("test_refresh_token");
             loginVO.setNickname("测试用户");
             loginVO.setAvatar("https://example.com/avatar.jpg");
             loginVO.setUserType("FARMER");
@@ -137,7 +138,8 @@ class AuthServiceTest {
 
             // Then
             assertThat(loginVO.getUserId()).isEqualTo(1L);
-            assertThat(loginVO.getToken()).isEqualTo("test_token");
+            assertThat(loginVO.getAccessToken()).isEqualTo("test_access_token");
+            assertThat(loginVO.getRefreshToken()).isEqualTo("test_refresh_token");
             assertThat(loginVO.getNickname()).isEqualTo("测试用户");
             assertThat(loginVO.getAvatar()).isEqualTo("https://example.com/avatar.jpg");
             assertThat(loginVO.getUserType()).isEqualTo("FARMER");

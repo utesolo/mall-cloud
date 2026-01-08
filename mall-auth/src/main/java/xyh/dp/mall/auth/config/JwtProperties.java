@@ -31,22 +31,4 @@ public class JwtProperties {
      * 默认7天
      */
     private Long refreshTokenExpiration = 604800000L;
-    
-    /**
-     * 兼容旧配置
-     * @deprecated 请使用accessTokenExpiration
-     */
-    @Deprecated
-    public Long getExpiration() {
-        return accessTokenExpiration;
-    }
-    
-    /**
-     * 兼容旧配置
-     * @deprecated 请使用setAccessTokenExpiration
-     */
-    @Deprecated
-    public void setExpiration(Long expiration) {
-        this.accessTokenExpiration = expiration;
-    }
 }

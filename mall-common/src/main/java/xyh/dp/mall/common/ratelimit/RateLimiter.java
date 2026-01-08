@@ -28,6 +28,13 @@ import java.util.List;
 public class RateLimiter {
 
     private final StringRedisTemplate redisTemplate;
+    
+    /**
+     * 降级策略：Redis故障时的限流行为
+     * true - 允许访问（宽松策略，适用于高可用性场景）
+     * false - 拒绝访问（严格策略，适用于高安全性场景）
+     */
+    private static final boolean FALLBACK_ALLOW_ON_ERROR = false;
 
     /**
      * Lua脚本：滑动窗口限流
@@ -103,9 +110,11 @@ public class RateLimiter {
             return allowed;
             
         } catch (Exception e) {
-            log.error("限流检查失败: key={}, 降级为允许访问", key, e);
-            // 降级策略：Redis故障时允许访问
-            return true;
+            log.error("限流检查失败: key={}, 采用{}降级策略", 
+                    key, FALLBACK_ALLOW_ON_ERROR ? "允许访问" : "拒绝访问", e);
+            // 降级策略：默认拒绝访问，保证安全
+            // 如需高可用性，可将FALLBACK_ALLOW_ON_ERROR设为true
+            return FALLBACK_ALLOW_ON_ERROR;
         }
     }
 

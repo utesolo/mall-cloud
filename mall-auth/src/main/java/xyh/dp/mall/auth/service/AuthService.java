@@ -53,13 +53,17 @@ public class AuthService {
      */
     @Transactional(rollbackFor = Exception.class)
     public LoginVO weChatLogin(WeChatLoginDTO loginDTO) {
-        // TODO 防止空指针异常
         // 1. 调用微信接口获取openid
         if (Objects.equals(loginDTO.getUserType(), "ADMIN")){
 
             LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(User::getOpenid, "ADMIN");
             User user = userMapper.selectOne(queryWrapper);
+            
+            // 验证管理员用户是否存在
+            if (user == null) {
+                throw new BusinessException("管理员用户不存在");
+            }
 
         // 管理员登录测试
             Map<String, Object> tokens = tokenService.generateTokens(user);
@@ -184,7 +188,6 @@ public class AuthService {
         loginVO.setAccessToken((String) tokens.get("accessToken"));
         loginVO.setRefreshToken((String) tokens.get("refreshToken"));
         loginVO.setExpiresIn((Long) tokens.get("expiresIn"));
-        loginVO.setToken((String) tokens.get("accessToken")); // 兼容旧接口
         loginVO.setNickname(user.getNickname());
         loginVO.setAvatar(user.getAvatar());
         loginVO.setUserType(user.getUserType());

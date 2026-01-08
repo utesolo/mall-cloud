@@ -25,6 +25,13 @@ public class IpRateLimiter {
     private final ReactiveStringRedisTemplate redisTemplate;
     
     /**
+     * 降级策略：Redis故障时的限流行为
+     * true - 允许访问（宽松策略，适用于高可用性场景）
+     * false - 拒绝访问（严格策略，适用于高安全性场景）
+     */
+    private static final boolean FALLBACK_ALLOW_ON_ERROR = false;
+    
+    /**
      * Lua脚本：滑动窗口限流算法
      * 1. 删除窗口外的旧数据
      * 2. 统计窗口内的请求数
@@ -85,8 +92,10 @@ public class IpRateLimiter {
             }
         })
         .onErrorResume(e -> {
-            log.error("限流检查失败，默认放行: ip={}, error={}", ip, e.getMessage());
-            return Mono.just(true); // 降级策略：出错时放行
+            log.error("限流检查失败，采用{}降级策略: ip={}, error={}", 
+                    FALLBACK_ALLOW_ON_ERROR ? "允许访问" : "拒绝访问", ip, e.getMessage());
+            // 降级策略：默认拒绝访问，保证安全
+            return Mono.just(FALLBACK_ALLOW_ON_ERROR);
         });
     }
     

@@ -42,14 +42,6 @@ public class LoginVO implements Serializable {
     private Long expiresIn;
 
     /**
-     * JWT Token（兼容旧接口）
-     * @deprecated 请使用accessToken
-     */
-    @Deprecated
-    @Schema(description = "访问令牌（已废弃，请使用accessToken）")
-    private String token;
-
-    /**
      * 用户昵称
      */
     @Schema(description = "用户昵称")
