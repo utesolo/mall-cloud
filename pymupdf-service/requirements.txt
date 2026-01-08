@@ -1,0 +1,6 @@
+# PyMuPDF4LLM服务依赖
+
+flask==3.0.0
+pymupdf4llm==0.0.5
+requests==2.31.0
+werkzeug==3.0.1

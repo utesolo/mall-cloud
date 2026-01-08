@@ -43,6 +43,14 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/io.projectreactor/reactor-test -->
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- 排除父pom中的web依赖，Gateway使用WebFlux -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
