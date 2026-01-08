@@ -30,7 +30,6 @@
         <module>mall-trade</module>
         <module>mall-search</module>
         <module>mall-job</module>
-        <module>mall-config</module>
         <module>mall-zipkin</module>
     </modules>
     <scm>
@@ -91,6 +90,12 @@
         </dependency>
 
         <!-- Elasticsearch -->
+        <dependency>
+            <groupId>co.elastic.clients</groupId>
+            <artifactId>elasticsearch-java</artifactId>
+            <version>9.2.3</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
